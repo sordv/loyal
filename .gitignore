@@ -1,0 +1,6 @@
+*
+
+!local/modules/legacy.loyalty/
+!local/modules/legacy.loyalty/**/*
+
+!.gitignore
