@@ -15,12 +15,20 @@ return [
     "items_id" => "menu_legacy_loyalty",
     "items" => [
         [
-            "text" => "Раздел 1",
-            "url" => "legacy_loyalty_page1.php",
+            "text" => Loc::getMessage("LEGACY_LOYALTY_MENU_PROGRAM"),
+            "url" => "menu_program.php",
         ],
         [
-            "text" => "Раздел 2",
-            "url" => "legacy_loyalty_page2.php",
+            "text" => Loc::getMessage("LEGACY_LOYALTY_MENU_USER"),
+            "url" => "menu_user.php",
+        ],
+        [
+            "text" => Loc::getMessage("LEGACY_LOYALTY_MENU_HISTORY"),
+            "url" => "menu_history.php",
+        ],
+        [
+            "text" => Loc::getMessage("LEGACY_LOYALTY_MENU_MANUAL"),
+            "url" => "menu_manual.php",
         ],
     ]
 ];
