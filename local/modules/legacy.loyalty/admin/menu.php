@@ -5,13 +5,13 @@ use Bitrix\Main\Localization\Loc;
 Loc::loadMessages(__FILE__);
 
 return [
-    "parent_menu" => "global_menu_services",
+    "parent_menu" => "global_menu_marketing",
     "section" => "legacy_loyalty",
     "sort" => 500,
     "text" => Loc::getMessage("LEGACY_LOYALTY_MENU"),
     "title" => Loc::getMessage("LEGACY_LOYALTY_MENU"),
-    "icon" => "default_menu_icon",
-    "page_icon" => "default_page_icon",
+    "icon" => "sale_menu_icon",
+    "page_icon" => "sale_page_icon",
     "items_id" => "menu_legacy_loyalty",
     "items" => [
         [

@@ -20,57 +20,34 @@ if (!Loader::includeModule('legacy.loyalty')) {
 }
 
 $request = Application::getInstance()->getContext()->getRequest();
+$message = null;
 
 // ======================
 // ACTIONS
 // ======================
 if (check_bitrix_sessid())
 {
-    // CREATE
-    if ($request->get('action') === 'add_program')
-    {
-        $type = $request->get('type');
-
-        $exists = ProgramTable::getList([
-            'filter' => ['TYPE' => $type]
-        ])->fetch();
-
-        $message = null;
-
-        if (!in_array($type, ['bonus', 'level', 'event']))
-        {
-            $message = [
-                "TYPE" => "ERROR",
-                "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_ERROR_TYPE")
-            ];
-        }
-        elseif ($exists)
-        {
-            $message = [
-                "TYPE" => "ERROR",
-                "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_ERROR_EXISTS")
-            ];
-        }
-        else
-        {
-            ProgramTable::add([
-                'TYPE' => $type
-            ]);
-
-            $message = [
-                "TYPE" => "OK",
-                "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_SUCCESS_ADD")
-            ];
-        }
-    }
-
-    // DELETE
-    if ($request->get('action') === 'delete_program')
+    if ($request->get('action') === 'toggle')
     {
         $id = (int)$request->get('id');
 
-        if ($id > 0) {
-            ProgramTable::delete($id);
+        if ($id > 0)
+        {
+            $program = ProgramTable::getById($id)->fetch();
+
+            if ($program)
+            {
+                $newStatus = ($program['ACTIVE'] === 'Y') ? 'N' : 'Y';
+
+                ProgramTable::update($id, [
+                    'ACTIVE' => $newStatus
+                ]);
+
+                $message = [
+                    "TYPE" => "OK",
+                    "MESSAGE" => ($newStatus === 'Y') ? "Программа включена" : "Программа выключена"
+                ];
+            }
         }
     }
 }
@@ -101,6 +78,7 @@ $lAdmin = new CAdminList($sTableID, $oSort);
 $lAdmin->AddHeaders([
     ["id" => "ID", "content" => Loc::getMessage("LEGACY_LOYALTY_ID"), "sort" => "ID", "default" => true],
     ["id" => "TYPE", "content" => Loc::getMessage("LEGACY_LOYALTY_TYPE"), "default" => true],
+    ["id" => "ACTIVE", "content" => "Статус", "default" => true],
 ]);
 
 // Заполняем строки
@@ -109,63 +87,51 @@ while ($program = $result->fetch())
     $row = &$lAdmin->AddRow($program['ID'], $program);
 
     $row->AddField("ID", $program['ID']);
-    $row->AddField("TYPE", htmlspecialcharsbx($programTypes[$program['TYPE']] ?? $program['TYPE']));
+
+    $row->AddField(
+        "TYPE",
+        htmlspecialcharsbx($programTypes[$program['TYPE']] ?? $program['NAME'])
+    );
+
+    $row->AddViewField(
+        "ACTIVE",
+        $program['ACTIVE'] === 'Y'
+            ? '<span style="color:green;">Включена</span>'
+            : '<span style="color:red;">Выключена</span>'
+    );
 
     // Действия
     $actions = [];
 
     $actions[] = [
-        "TEXT" => Loc::getMessage("LEGACY_LOYALTY_EDIT"),
-        "ACTION" => "",
+        "TEXT" => $program['ACTIVE'] === 'Y' ? "Выключить" : "Включить",
+        "ACTION" => "window.location='?action=toggle&id=".$program['ID']."&".bitrix_sessid_get()."'",
         "DEFAULT" => true
     ];
 
     $actions[] = [
-        "TEXT" => Loc::getMessage("LEGACY_LOYALTY_DELETE"),
-        "ACTION" => "if(confirm('".Loc::getMessage("LEGACY_LOYALTY_CONFIRM_DELETE")."')) window.location='?action=delete_program&id=".$program['ID']."&".bitrix_sessid_get()."'"
+        "TEXT" => Loc::getMessage("LEGACY_LOYALTY_EDIT"),
+        "ACTION" => ""
     ];
 
     $row->AddActions($actions);
 }
 
 // ======================
-// КНОПКА СОЗДАНИЯ
+// КОНТЕКСТНОЕ МЕНЮ (убрали создание)
 // ======================
-$aContext = [
-    [
-        "TEXT" => "Новая программа",
-        "TITLE" => "Создать программу",
-        "MENU" => [
-            [
-                "TEXT" => $programTypes['bonus'],
-                "ACTION" => "window.location='?action=add_program&type=bonus&".bitrix_sessid_get()."'"
-            ],
-            [
-                "TEXT" => $programTypes['level'],
-                "ACTION" => "window.location='?action=add_program&type=level&".bitrix_sessid_get()."'"
-            ],
-            [
-                "TEXT" => $programTypes['event'],
-                "ACTION" => "window.location='?action=add_program&type=event&".bitrix_sessid_get()."'"
-            ],
-        ]
-    ]
-];
-
-$lAdmin->AddAdminContextMenu($aContext);
+$lAdmin->AddAdminContextMenu([]);
 
 // ======================
 // ВЫВОД
 // ======================
 $lAdmin->CheckListMode();
+
 if ($message)
 {
     CAdminMessage::ShowMessage($message);
 }
+
 $lAdmin->DisplayList();
-
-?>
-
-<?php
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

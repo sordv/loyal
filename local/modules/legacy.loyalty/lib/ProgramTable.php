@@ -22,12 +22,12 @@ class ProgramTable extends Entity\DataManager
             new Entity\StringField('TYPE', [
                 'required' => true,
             ]),
+            new Entity\StringField('NAME', [
+                'required' => true,
+            ]),
             new Entity\BooleanField('ACTIVE', [
                 'values' => ['N', 'Y'],
                 'default_value' => 'Y'
-            ]),
-            new Entity\DatetimeField('CREATED_AT', [
-                'default_value' => new Type\DateTime()
             ]),
         ];
     }
