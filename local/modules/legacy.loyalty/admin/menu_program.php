@@ -76,9 +76,9 @@ $lAdmin = new CAdminList($sTableID, $oSort);
 
 // Заголовки
 $lAdmin->AddHeaders([
-    ["id" => "ID", "content" => Loc::getMessage("LEGACY_LOYALTY_ID"), "sort" => "ID", "default" => true],
-    ["id" => "TYPE", "content" => Loc::getMessage("LEGACY_LOYALTY_TYPE"), "default" => true],
-    ["id" => "ACTIVE", "content" => "Статус", "default" => true],
+    ["id" => "ID", "content" => Loc::getMessage("LEGACY_LOYALTY_PROGRAM_ID"), "sort" => "ID", "default" => true],
+    ["id" => "TYPE", "content" => Loc::getMessage("LEGACY_LOYALTY_PROGRAM_TYPE"), "default" => true],
+    ["id" => "ACTIVE", "content" => Loc::getMessage("LEGACY_LOYALTY_PROGRAM_STATUS"), "default" => true],
 ]);
 
 // Заполняем строки
@@ -104,7 +104,7 @@ while ($program = $result->fetch())
     $actions = [];
 
     $actions[] = [
-        "TEXT" => $program['ACTIVE'] === 'Y' ? "Выключить" : "Включить",
+        "TEXT" => $program['ACTIVE'] === 'Y' ? Loc::getMessage("LEGACY_LOYALTY_TURN_OFF") : Loc::getMessage("LEGACY_LOYALTY_TURN_ON"),
         "ACTION" => "window.location='?action=toggle&id=".$program['ID']."&".bitrix_sessid_get()."'",
         "DEFAULT" => true
     ];
