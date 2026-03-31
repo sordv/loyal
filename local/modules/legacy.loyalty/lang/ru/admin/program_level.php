@@ -1,0 +1,5 @@
+<?php
+
+$MESS["LEGACY_LOYALTY_TYPE_LEVEL"] = "Разбиение пользователей на уровни";
+
+$MESS["LEGACY_LOYALTY_TAB_RULE"] = "Правила разбиения";

@@ -11,7 +11,6 @@ Loc::loadMessages($_SERVER["DOCUMENT_ROOT"]."/local/modules/legacy.loyalty/admin
 
 $APPLICATION->SetTitle(Loc::getMessage("LEGACY_LOYALTY_MENU_PROGRAM"));
 
-// Подключаем модуль
 if (!Loader::includeModule('legacy.loyalty')) {
     require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
     echo Loc::getMessage("LEGACY_LOYALTY_MODULE_NOT_INSTALLED");
@@ -22,9 +21,6 @@ if (!Loader::includeModule('legacy.loyalty')) {
 $request = Application::getInstance()->getContext()->getRequest();
 $message = null;
 
-// ======================
-// ACTIONS
-// ======================
 if (check_bitrix_sessid())
 {
     if ($request->get('action') === 'toggle')
@@ -52,9 +48,6 @@ if (check_bitrix_sessid())
     }
 }
 
-// ======================
-// ДАННЫЕ
-// ======================
 $programTypes = [
     'bonus' => Loc::getMessage("LEGACY_LOYALTY_TYPE_BONUS"),
     'level' => Loc::getMessage("LEGACY_LOYALTY_TYPE_LEVEL"),
@@ -65,23 +58,18 @@ $result = ProgramTable::getList([
     'order' => ['ID' => 'ASC']
 ]);
 
-// ======================
-// CAdminList
-// ======================
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 
 $sTableID = "tbl_loyalty_programs";
 $oSort = new CAdminSorting($sTableID, "ID", "asc");
 $lAdmin = new CAdminList($sTableID, $oSort);
 
-// Заголовки
 $lAdmin->AddHeaders([
     ["id" => "ID", "content" => Loc::getMessage("LEGACY_LOYALTY_PROGRAM_ID"), "sort" => "ID", "default" => true],
     ["id" => "TYPE", "content" => Loc::getMessage("LEGACY_LOYALTY_PROGRAM_TYPE"), "default" => true],
     ["id" => "ACTIVE", "content" => Loc::getMessage("LEGACY_LOYALTY_PROGRAM_STATUS"), "default" => true],
 ]);
 
-// Заполняем строки
 while ($program = $result->fetch())
 {
     $row = &$lAdmin->AddRow($program['ID'], $program);
@@ -100,7 +88,6 @@ while ($program = $result->fetch())
             : '<span style="color:red;">Выключена</span>'
     );
 
-    // Действия
     $actions = [];
 
     $actions[] = [
@@ -109,22 +96,29 @@ while ($program = $result->fetch())
         "DEFAULT" => true
     ];
 
+    $editUrl = '';
+
+    switch ($program['TYPE']) {
+        case 'bonus':
+            $editUrl = 'program_bonus.php';
+            break;
+        case 'level':
+            $editUrl = 'program_level.php';
+            break;
+        case 'event':
+            $editUrl = 'program_event.php';
+            break;
+    }
+
     $actions[] = [
         "TEXT" => Loc::getMessage("LEGACY_LOYALTY_EDIT"),
-        "ACTION" => ""
+        "ACTION" => "window.location='".$editUrl."?id=".$program['ID']."'"
     ];
 
     $row->AddActions($actions);
 }
 
-// ======================
-// КОНТЕКСТНОЕ МЕНЮ (убрали создание)
-// ======================
 $lAdmin->AddAdminContextMenu([]);
-
-// ======================
-// ВЫВОД
-// ======================
 $lAdmin->CheckListMode();
 
 if ($message)
