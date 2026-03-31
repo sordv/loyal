@@ -39,6 +39,14 @@ Class legacy_loyalty extends CModule
 
     function InstallDB()
     {
+        global $DB;
+
+        $this->errors = $DB->RunSQLBatch(__DIR__ . "/db/mysql/install.sql");
+
+        if (!empty($this->errors)) {
+            return false;
+        }
+
         return true;
     }
 
@@ -59,6 +67,10 @@ Class legacy_loyalty extends CModule
 
     function UnInstallDB()
     {
+        global $DB;
+
+        $DB->RunSQLBatch(__DIR__ . "/db/mysql/uninstall.sql");
+
         return true;
     }
 
@@ -71,7 +83,7 @@ Class legacy_loyalty extends CModule
     {
         global $APPLICATION;
 
-        //$this->InstallDB();
+        $this->InstallDB();
         //$this->InstallEvents();
         $this->InstallFiles();
 

@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS b_legacy_loyalty_program;
