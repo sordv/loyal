@@ -6,10 +6,8 @@ use \Bitrix\Main\Application;
 
 Loc::loadMessages(__FILE__);
 
-Class legacy_loyalty extends CModule
-{
-    function __construct()
-    {
+Class legacy_loyalty extends CModule {
+    function __construct() {
         $arModuleVersion = array();
         include(__DIR__."/version.php");
 
@@ -25,8 +23,7 @@ Class legacy_loyalty extends CModule
         $this->MODULE_GROUP_RIGHTS = 'Y';
     }
 
-    function InstallFiles()
-    {
+    function InstallFiles() {
         CopyDirFiles(
             __DIR__ . "/../admin",
             $_SERVER["DOCUMENT_ROOT"] . "/bitrix/admin",
@@ -37,8 +34,7 @@ Class legacy_loyalty extends CModule
         return true;
     }
 
-    function InstallDB()
-    {
+    function InstallDB() {
         global $DB;
 
         $this->errors = $DB->RunSQLBatch(__DIR__ . "/db/mysql/install.sql");
@@ -50,13 +46,15 @@ Class legacy_loyalty extends CModule
         return true;
     }
 
-    function InstallEvents()
-    {
+    function InstallEvents() {
+        require_once __DIR__ . '/../lib/Service/BonusService.php';
+        require_once __DIR__ . '/../lib/EventHandler/BonusHandler.php';
+        \Legacy\Loyalty\EventHandler\BonusHandler::registerAgents();
+
         return true;
     }
 
-    function UnInstallFiles()
-    {
+    function UnInstallFiles() {
         DeleteDirFiles(
             __DIR__ . "/../admin",
             $_SERVER["DOCUMENT_ROOT"] . "/bitrix/admin"
@@ -65,8 +63,7 @@ Class legacy_loyalty extends CModule
         return true;
     }
 
-    function UnInstallDB()
-    {
+    function UnInstallDB() {
         global $DB;
 
         $DB->RunSQLBatch(__DIR__ . "/db/mysql/uninstall.sql");
@@ -74,13 +71,15 @@ Class legacy_loyalty extends CModule
         return true;
     }
 
-    function UnInstallEvents()
-    {
+    function UnInstallEvents() {
+        require_once __DIR__ . '/../lib/Service/BonusService.php';
+        require_once __DIR__ . '/../lib/EventHandler/BonusHandler.php';
+        \Legacy\Loyalty\EventHandler\BonusHandler::unregisterAgents();
+
         return true;
     }
 
-    function DoInstall()
-    {
+    function DoInstall() {
         global $APPLICATION;
 
         $this->InstallDB();
@@ -91,18 +90,14 @@ Class legacy_loyalty extends CModule
         $APPLICATION->IncludeAdminFile(Loc::getMessage("LEGACY_LOYALTY_INSTALL_TITLE"), __DIR__ . "/step.php");
     }
 
-    function DoUninstall()
-    {
+    function DoUninstall() {
         global $APPLICATION;
         $context = Application::getInstance()->getContext();
         $request = $context->getRequest();
 
-        if($request["step"]<2)
-        {
+        if($request["step"]<2) {
             $APPLICATION->IncludeAdminFile(Loc::getMessage("LEGACY_LOYALTY_UNINSTALL_TITLE"), __DIR__ . "/unstep1.php");
-        }
-        elseif($request["step"]==2)
-        {
+        } elseif($request["step"]==2) {
             $this->UnInstallFiles();
             //$this->UnInstallEvents();
 

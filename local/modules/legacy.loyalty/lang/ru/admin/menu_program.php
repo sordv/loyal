@@ -1,6 +1,6 @@
 <?php
 
-$MESS["LEGACY_LOYALTY_MENU_PROGRAM"] = "Программы лояльности";
+$MESS["LEGACY_LOYALTY_MENU_PROGRAM"] = "Управление программами лояльности";
 
 $MESS["LEGACY_LOYALTY_MODULE_NOT_INSTALLED"] = "Модуль legacy.loyalty не установлен";
 

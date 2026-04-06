@@ -21,18 +21,14 @@ if (!Loader::includeModule('legacy.loyalty')) {
 $request = Application::getInstance()->getContext()->getRequest();
 $message = null;
 
-if ($request->isPost() && check_bitrix_sessid())
-{
+if ($request->isPost() && check_bitrix_sessid()) {
     Option::set("legacy.loyalty", "bonus_name", $request->getPost("bonus_name"));
     Option::set("legacy.loyalty", "bonus_lifetime", $request->getPost("bonus_lifetime"));
     Option::set("legacy.loyalty", "bonus_delay", $request->getPost("bonus_delay"));
 
-    if ($request->getPost("apply"))
-    {
+    if ($request->getPost("apply")) {
         $message = ["TYPE" => "OK", "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_SAVED")];
-    }
-    else
-    {
+    } else {
         LocalRedirect("menu_program.php");
     }
 }
@@ -43,8 +39,7 @@ $bonusDelay = Option::get("legacy.loyalty", "bonus_delay", "0");
 
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 
-if ($message)
-{
+if ($message) {
     CAdminMessage::ShowMessage($message);
 }
 

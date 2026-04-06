@@ -5,12 +5,13 @@ CREATE TABLE IF NOT EXISTS b_legacy_loyalty_program (
     ACTIVE CHAR(1) DEFAULT 'N'
 );
 
+DELETE FROM b_legacy_loyalty_program;
 INSERT INTO b_legacy_loyalty_program (TYPE, NAME, ACTIVE) VALUES
 ('bonus', 'Начисление/списание бонусов на заказ', 'N'),
 ('level', 'Разбиение пользователей на уровни', 'N'),
 ('event', 'Вознаграждения за события', 'N');
 
-CREATE TABLE b_legacy_loyalty_bonus_rule (
+CREATE TABLE IF NOT EXISTS b_legacy_loyalty_bonus_rule (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     SORT INT DEFAULT 100,
     ACTIVE CHAR(1) DEFAULT 'Y',
@@ -20,7 +21,7 @@ CREATE TABLE b_legacy_loyalty_bonus_rule (
     CONDITIONS TEXT
 );
 
-CREATE TABLE b_legacy_loyalty_bonus_history (
+CREATE TABLE IF NOT EXISTS b_legacy_loyalty_bonus_history (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     USER_ID INT,
     TYPE VARCHAR(50),
@@ -30,14 +31,15 @@ CREATE TABLE b_legacy_loyalty_bonus_history (
     CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE b_legacy_loyalty_bonus_user (
+CREATE TABLE IF NOT EXISTS b_legacy_loyalty_bonus_user (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     USER_ID INT,
     AMOUNT INT,
-    EXPIRE_AT DATETIME NULL
+    ACTIVATE_AT DATE NULL,
+    EXPIRE_AT DATE NULL
 );
 
-CREATE TABLE b_legacy_loyalty_level_rule (
+CREATE TABLE IF NOT EXISTS b_legacy_loyalty_level_rule (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     SORT INT DEFAULT 100,
     ACTIVE CHAR(1) DEFAULT 'Y',
@@ -47,7 +49,7 @@ CREATE TABLE b_legacy_loyalty_level_rule (
     PRIVILEGES TEXT
 );
 
-CREATE TABLE b_legacy_loyalty_level_history (
+CREATE TABLE IF NOT EXISTS b_legacy_loyalty_level_history (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     USER_ID INT,
     OLD_LEVEL_ID INT NULL,
@@ -56,14 +58,14 @@ CREATE TABLE b_legacy_loyalty_level_history (
     CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE b_legacy_loyalty_level_user (
+CREATE TABLE IF NOT EXISTS b_legacy_loyalty_level_user (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     USER_ID INT,
     LEVEL_ID INT,
     UPDATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE b_legacy_loyalty_event_rule (
+CREATE TABLE IF NOT EXISTS b_legacy_loyalty_event_rule (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     SORT INT DEFAULT 100,
     ACTIVE CHAR(1) DEFAULT 'Y',
@@ -74,7 +76,7 @@ CREATE TABLE b_legacy_loyalty_event_rule (
     PRIVILEGES TEXT
 );
 
-CREATE TABLE b_legacy_loyalty_event_history (
+CREATE TABLE IF NOT EXISTS b_legacy_loyalty_event_history (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     USER_ID INT,
     RULE_ID INT,

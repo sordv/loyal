@@ -21,18 +21,14 @@ if (!Loader::includeModule('legacy.loyalty')) {
 $request = Application::getInstance()->getContext()->getRequest();
 $message = null;
 
-if (check_bitrix_sessid())
-{
-    if ($request->get('action') === 'toggle')
-    {
+if (check_bitrix_sessid()) {
+    if ($request->get('action') === 'toggle') {
         $id = (int)$request->get('id');
 
-        if ($id > 0)
-        {
+        if ($id > 0) {
             $program = ProgramTable::getById($id)->fetch();
 
-            if ($program)
-            {
+            if ($program) {
                 $newStatus = ($program['ACTIVE'] === 'Y') ? 'N' : 'Y';
 
                 ProgramTable::update($id, [
@@ -70,8 +66,7 @@ $lAdmin->AddHeaders([
     ["id" => "ACTIVE", "content" => Loc::getMessage("LEGACY_LOYALTY_PROGRAM_STATUS"), "default" => true],
 ]);
 
-while ($program = $result->fetch())
-{
+while ($program = $result->fetch()) {
     $row = &$lAdmin->AddRow($program['ID'], $program);
 
     $row->AddField("ID", $program['ID']);
@@ -121,8 +116,7 @@ while ($program = $result->fetch())
 $lAdmin->AddAdminContextMenu([]);
 $lAdmin->CheckListMode();
 
-if ($message)
-{
+if ($message) {
     CAdminMessage::ShowMessage($message);
 }
 
