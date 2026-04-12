@@ -6,8 +6,7 @@ use Bitrix\Main\Config\Option;
 use Bitrix\Main\Type\DateTime;
 use Bitrix\Main\Application;
 
-class BonusService
-{
+class BonusService {
     private static function getSettings() {
         return [
             'lifetime' => max(0, (int)Option::get("legacy.loyalty", "bonus_lifetime", 30)),

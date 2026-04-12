@@ -42,7 +42,7 @@ if ($request->isPost() && check_bitrix_sessid()) {
 
     if ($request->getPost("action") === "level") {
         $levelId = (int)$request->getPost("level_id");
-        LevelService::setLevel($userId, $levelId, 'admin');
+        LevelService::setLevelByAdmin($userId, $levelId, 'admin');
     }
 }
 
