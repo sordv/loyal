@@ -16,18 +16,15 @@ class BonusService {
 
     private static function getDate($offset = 0) {
         $date = new \DateTime();
-
         if ($offset !== 0) {
             $date->modify("+{$offset} days");
         }
-
         return $date->format('Y-m-d');
     }
 
     public static function cleanupExpiredBonuses() {
         $connection = Application::getConnection();
         $today = self::getDate(0);
-
         $connection->queryExecute("
             DELETE FROM b_legacy_loyalty_bonus_user
             WHERE EXPIRE_AT IS NOT NULL 
@@ -40,23 +37,56 @@ class BonusService {
 
         $settings = self::getSettings();
         $connection = Application::getConnection();
+        $sqlHelper = $connection->getSqlHelper();
+
         $userId = (int)$userId;
         $amount = (int)$amount;
         $activateDate = self::getDate($settings['delay']);
         $expireDate = $settings['lifetime'] > 0 ? self::getDate($settings['delay'] + $settings['lifetime']) : null;
 
-        $activateSql = "'" . $activateDate . "'";
-        $expireSql = $expireDate ? "'" . $expireDate . "'" : "NULL";
+        $whenExpire = $expireDate
+            ? "EXPIRE_AT = '" . $sqlHelper->forSql($expireDate) . "'"
+            : "EXPIRE_AT IS NULL";
 
-        $connection->queryExecute("
-            INSERT INTO b_legacy_loyalty_bonus_user (USER_ID, AMOUNT, ACTIVATE_AT, EXPIRE_AT)
-            VALUES ({$userId}, {$amount}, {$activateSql}, {$expireSql})
-        ");
+        try{
+            $connection->startTransaction();
 
-        $connection->queryExecute("
-            INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE)
-            VALUES ({$userId}, 'add', {$amount}, 'system');
-        ");
+            $existingDates = $connection->query("
+                SELECT ID, AMOUNT
+                FROM b_legacy_loyalty_bonus_user
+                WHERE USER_ID = {$userId}
+                    AND ACTIVATE_AT = '" . $sqlHelper->forSql($activateDate) . "'
+                    AND {$whenExpire}
+                LIMIT 1
+            ")->fetch();
+
+            if($existingDates) {
+                $newAmount = (int)$existingDates['AMOUNT'] + $amount;
+                $connection->queryExecute("
+                    UPDATE b_legacy_loyalty_bonus_user
+                    SET AMOUNT = {$newAmount}
+                    WHERE ID = " . (int)$existingDates['ID'] . "
+                ");
+            } else {
+                $activateSql = "'" . $sqlHelper->forSql($activateDate) . "'";
+                $expireSql = $expireDate ? "'" . $sqlHelper->forSql($expireDate) . "'" : "NULL";
+
+                $connection->queryExecute("
+                    INSERT INTO b_legacy_loyalty_bonus_user (USER_ID, AMOUNT, ACTIVATE_AT, EXPIRE_AT)
+                    VALUES ({$userId}, {$amount}, {$activateSql}, {$expireSql})
+                ");
+            }
+
+            $connection->queryExecute("
+                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE)
+                VALUES ({$userId}, 'add', {$amount}, 'system');
+            ");
+
+            $connection->commitTransaction();
+        } catch (\Exception $ex) {
+            $connection->rollbackTransaction();
+            throw $ex;
+        }
     }
 
     public static function addBonusByAdmin($userId, $amount) {
@@ -64,123 +94,181 @@ class BonusService {
 
         $settings = self::getSettings();
         $connection = Application::getConnection();
+        $sqlHelper = $connection->getSqlHelper();
+
         $userId = (int)$userId;
         $amount = (int)$amount;
-
         $activateDate = self::getDate(0);
         $expireDate = $settings['lifetime'] > 0 ? self::getDate($settings['lifetime']) : null;
 
-        $activateSql = "'" . $activateDate . "'";
-        $expireSql = $expireDate ? "'" . $expireDate . "'" : "NULL";
+        $whenExpire = $expireDate
+            ? "EXPIRE_AT = '" . $sqlHelper->forSql($expireDate) . "'"
+            : "EXPIRE_AT IS NULL";
 
-        $connection->queryExecute("
-            INSERT INTO b_legacy_loyalty_bonus_user (USER_ID, AMOUNT, ACTIVATE_AT, EXPIRE_AT)
-            VALUES ({$userId}, {$amount}, {$activateSql}, {$expireSql})
-        ");
+        try {
+            $connection->startTransaction();
 
-        $connection->queryExecute("
-            INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE)
-            VALUES ({$userId}, 'add', {$amount}, 'admin'); 
-        ");
+            $existingDates = $connection->query("
+                SELECT ID, AMOUNT
+                FROM b_legacy_loyalty_bonus_user
+                WHERE USER_ID = {$userId}
+                    AND ACTIVATE_AT = '" . $sqlHelper->forSql($activateDate) . "'
+                    AND {$whenExpire}
+                LIMIT 1
+            ")->fetch();
+
+            if($existingDates) {
+                $newAmount = (int)$existingDates['AMOUNT'] + $amount;
+                $connection->queryExecute("
+                    UPDATE b_legacy_loyalty_bonus_user
+                    SET AMOUNT = {$newAmount}
+                    WHERE ID = " . (int)$existingDates['ID'] . "
+                ");
+            } else {
+                $activateSql = "'" . $sqlHelper->forSql($activateDate) . "'";
+                $expireSql = $expireDate ? "'" . $sqlHelper->forSql($expireDate) . "'" : "NULL";
+
+                $connection->queryExecute("
+                    INSERT INTO b_legacy_loyalty_bonus_user (USER_ID, AMOUNT, ACTIVATE_AT, EXPIRE_AT)
+                    VALUES ({$userId}, {$amount}, {$activateSql}, {$expireSql})
+                ");
+            }
+
+            $connection->queryExecute("
+                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE)
+                VALUES ({$userId}, 'add', {$amount}, 'admin'); 
+            ");
+
+            $connection->commitTransaction();
+        } catch (\Exception $ex) {
+            $connection->rollbackTransaction();
+            throw $ex;
+        }
     }
+
     public static function spendBonus($userId, $amount) {
         if ($amount <= 0) return;
 
         $connection = Application::getConnection();
+        $sqlHelper = $connection->getSqlHelper();
+
         $userId = (int)$userId;
         $needToSpend = (int)$amount;
         $today = self::getDate(0);
+        $todaySql = $sqlHelper->forSql($today);
 
-        $records = $connection->query("
-            SELECT ID, AMOUNT, EXPIRE_AT
-            FROM b_legacy_loyalty_bonus_user
-            WHERE USER_ID = {$userId} 
-                AND ACTIVATE_AT <= '{$today}'
-                AND (EXPIRE_AT IS NULL OR EXPIRE_AT >= '{$today}')
-                AND AMOUNT > 0
-            ORDER BY 
-                CASE WHEN EXPIRE_AT IS NULL THEN 1 ELSE 0 END,
-                EXPIRE_AT ASC,
-                ID ASC
-        ");
+        try {
+            $connection->startTransaction();
 
-        while ($row = $records->fetch()) {
-            if ($needToSpend <= 0) break;
+            $records = $connection->query("
+                SELECT ID, AMOUNT, EXPIRE_AT
+                FROM b_legacy_loyalty_bonus_user
+                WHERE USER_ID = {$userId} 
+                    AND ACTIVATE_AT <= '{$todaySql}'
+                    AND (EXPIRE_AT IS NULL OR EXPIRE_AT >= '{$todaySql}')
+                    AND AMOUNT > 0
+                ORDER BY 
+                    CASE WHEN EXPIRE_AT IS NULL THEN 1 ELSE 0 END,
+                    EXPIRE_AT ASC,
+                    ID ASC
+            ");
 
-            $rowId = (int)$row['ID'];
-            $rowAmount = (int)$row['AMOUNT'];
+            while ($row = $records->fetch()) {
+                if ($needToSpend <= 0) break;
 
-            if ($rowAmount <= $needToSpend) {
-                $connection->queryExecute("
-                    DELETE FROM b_legacy_loyalty_bonus_user
-                    WHERE ID = {$rowId}
-                ");
-                $needToSpend -= $rowAmount;
-            } else {
-                $newAmount = $rowAmount - $needToSpend;
-                $connection->queryExecute("
-                    UPDATE b_legacy_loyalty_bonus_user
-                    SET AMOUNT = {$newAmount}
-                    WHERE ID = {$rowId}
-                ");
-                $needToSpend = 0;
+                $rowId = (int)$row['ID'];
+                $rowAmount = (int)$row['AMOUNT'];
+
+                if ($rowAmount <= $needToSpend) {
+                    $connection->queryExecute("
+                        DELETE FROM b_legacy_loyalty_bonus_user
+                        WHERE ID = {$rowId}
+                    ");
+                    $needToSpend -= $rowAmount;
+                } else {
+                    $newAmount = $rowAmount - $needToSpend;
+                    $connection->queryExecute("
+                        UPDATE b_legacy_loyalty_bonus_user
+                        SET AMOUNT = {$newAmount}
+                        WHERE ID = {$rowId}
+                    ");
+                    $needToSpend = 0;
+                }
             }
-        }
 
-        $connection->queryExecute("
-            INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE)
-            VALUES ({$userId}, 'spend', {$amount}, 'system')
-        ");
+            $connection->queryExecute("
+                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE)
+                VALUES ({$userId}, 'spend', {$amount}, 'system')
+            ");
+
+            $connection->commitTransaction();
+        } catch (\Exception $ex) {
+            $connection->rollbackTransaction();
+            throw $ex;
+        }
     }
 
     public static function spendBonusByAdmin($userId, $amount) {
         if ($amount <= 0) return;
 
         $connection = Application::getConnection();
+        $sqlHelper = $connection->getSqlHelper();
+
         $userId = (int)$userId;
         $needToSpend = (int)$amount;
         $today = self::getDate(0);
+        $todaySql = $sqlHelper->forSql($today);
 
-        $records = $connection->query("
-            SELECT ID, AMOUNT, EXPIRE_AT
-            FROM b_legacy_loyalty_bonus_user
-            WHERE USER_ID = {$userId}
-                AND (EXPIRE_AT IS NULL OR EXPIRE_AT >= '{$today}')
-                AND AMOUNT > 0
-            ORDER BY 
-                CASE WHEN EXPIRE_AT IS NULL THEN 1 ELSE 0 END,
-                EXPIRE_AT ASC,
-                ID ASC
-        ");
+        try {
+            $connection->startTransaction();
 
-        while ($row = $records->fetch()) {
-            if ($needToSpend <= 0) break;
+            $records = $connection->query("
+                SELECT ID, AMOUNT, EXPIRE_AT
+                FROM b_legacy_loyalty_bonus_user
+                WHERE USER_ID = {$userId}
+                    AND (EXPIRE_AT IS NULL OR EXPIRE_AT >= '{$todaySql}')
+                    AND AMOUNT > 0
+                ORDER BY 
+                    CASE WHEN EXPIRE_AT IS NULL THEN 1 ELSE 0 END,
+                    EXPIRE_AT ASC,
+                    ID ASC
+            ");
 
-            $rowId = (int)$row['ID'];
-            $rowAmount = (int)$row['AMOUNT'];
+            while ($row = $records->fetch()) {
+                if ($needToSpend <= 0) break;
 
-            if ($rowAmount <= $needToSpend) {
-                $connection->queryExecute("
-                    DELETE FROM b_legacy_loyalty_bonus_user
-                    WHERE ID = {$rowId}
-                ");
-                $needToSpend -= $rowAmount;
-            } else {
-                $newAmount = $rowAmount - $needToSpend;
-                $connection->queryExecute("
-                    UPDATE b_legacy_loyalty_bonus_user
-                    SET AMOUNT = {$newAmount}
-                    WHERE ID = {$rowId}
-                ");
-                $needToSpend = 0;
+                $rowId = (int)$row['ID'];
+                $rowAmount = (int)$row['AMOUNT'];
+
+                if ($rowAmount <= $needToSpend) {
+                    $connection->queryExecute("
+                        DELETE FROM b_legacy_loyalty_bonus_user
+                        WHERE ID = {$rowId}
+                    ");
+                    $needToSpend -= $rowAmount;
+                } else {
+                    $newAmount = $rowAmount - $needToSpend;
+                    $connection->queryExecute("
+                        UPDATE b_legacy_loyalty_bonus_user
+                        SET AMOUNT = {$newAmount}
+                        WHERE ID = {$rowId}
+                    ");
+                    $needToSpend = 0;
+                }
             }
-        }
 
-        $connection->queryExecute("
-            INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE)
-            VALUES ({$userId}, 'spend', {$amount}, 'admin')
-        ");
+            $connection->queryExecute("
+                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE)
+                VALUES ({$userId}, 'spend', {$amount}, 'admin')
+            ");
+
+            $connection->commitTransaction();
+        } catch (\Exception $ex) {
+            $connection->rollbackTransaction();
+            throw $ex;
+        }
     }
+
     public static function getBalance($userId) {
         $connection = Application::getConnection();
         $userId = (int)$userId;
