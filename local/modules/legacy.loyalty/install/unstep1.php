@@ -15,6 +15,6 @@ Loc::loadMessages(__FILE__);
     <input type="hidden" name="step" value="2">
     <?echo CAdminMessage::ShowMessage(Loc::getMessage("LEGACY_LOYALTY_UNINSTALL_WARN"))?>
     <p><?echo Loc::getMessage("LEGACY_LOYALTY_UNINSTALL_SAVEDATA")?></p>
-    <p><input type="checkbox" name="savedata" id="savedata" value="Y" checked><label for="savedata"><?echo Loc::getMessage("LEGACY_LOYALTY_UNINSTALL_SAVETABLES")?></label></p>
+    <p><input type="checkbox" name="savedata" id="savedata" value="Y"><label for="savedata"><?echo Loc::getMessage("LEGACY_LOYALTY_UNINSTALL_SAVETABLES")?></label></p>
     <input type="submit" name="" value="<?echo Loc::getMessage("LEGACY_LOYALTY_UNINSTALL_DELETE")?>">
 </form>
