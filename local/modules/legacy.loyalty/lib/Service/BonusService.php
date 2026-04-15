@@ -36,7 +36,7 @@ class BonusService {
     }
 
     public static function addBonus($userId, $amount) {
-        if ($amount < 0) return;
+        if ($amount <= 0) return;
 
         $settings = self::getSettings();
         $connection = Application::getConnection();
@@ -60,7 +60,7 @@ class BonusService {
     }
 
     public static function addBonusByAdmin($userId, $amount) {
-        if ($amount < 0) return;
+        if ($amount <= 0) return;
 
         $settings = self::getSettings();
         $connection = Application::getConnection();
@@ -84,7 +84,7 @@ class BonusService {
         ");
     }
     public static function spendBonus($userId, $amount) {
-        if ($amount < 0) return;
+        if ($amount <= 0) return;
 
         $connection = Application::getConnection();
         $userId = (int)$userId;
@@ -104,7 +104,9 @@ class BonusService {
                 ID ASC
         ");
 
-        while ($row = $records->fetch() && $needToSpend > 0) {
+        while ($row = $records->fetch()) {
+            if ($needToSpend <= 0) break;
+
             $rowId = (int)$row['ID'];
             $rowAmount = (int)$row['AMOUNT'];
 
@@ -132,7 +134,7 @@ class BonusService {
     }
 
     public static function spendBonusByAdmin($userId, $amount) {
-        if ($amount < 0) return;
+        if ($amount <= 0) return;
 
         $connection = Application::getConnection();
         $userId = (int)$userId;
@@ -151,7 +153,9 @@ class BonusService {
                 ID ASC
         ");
 
-        while ($row = $records->fetch() && $needToSpend > 0) {
+        while ($row = $records->fetch()) {
+            if ($needToSpend <= 0) break;
+
             $rowId = (int)$row['ID'];
             $rowAmount = (int)$row['AMOUNT'];
 

@@ -1,11 +1,12 @@
-CREATE TABLE IF NOT EXISTS b_legacy_loyalty_program (
+DROP TABLE b_legacy_loyalty_program;
+
+CREATE TABLE b_legacy_loyalty_program (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     TYPE VARCHAR(50) NOT NULL,
     NAME VARCHAR(255) NOT NULL,
     ACTIVE CHAR(1) DEFAULT 'N'
 );
 
-DELETE FROM b_legacy_loyalty_program;
 INSERT INTO b_legacy_loyalty_program (TYPE, NAME, ACTIVE) VALUES
 ('bonus', 'Начисление/списание бонусов на заказ', 'N'),
 ('level', 'Разбиение пользователей на уровни', 'N'),
@@ -81,4 +82,19 @@ CREATE TABLE IF NOT EXISTS b_legacy_loyalty_event_history (
     USER_ID INT,
     RULE_ID INT,
     CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS b_legacy_loyalty_system_log (
+    ID INT AUTO_INCREMENT PRIMARY KEY,
+    CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ACTION VARCHAR(50) NOT NULL,
+    TARGET_TYPE VARCHAR(50) NOT NULL,
+    TARGET_ID INT NULL,
+    OLD_VALUE TEXT NULL,
+    NEW_VALUE TEXT NULL,
+    ADMIN_ID INT NULL,
+    IP VARCHAR(45) NULL,
+    INDEX idx_action (ACTION),
+    INDEX idx_target (TARGET_TYPE, TARGET_ID),
+    INDEX idx_created (CREATED_AT)
 );

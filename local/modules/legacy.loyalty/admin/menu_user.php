@@ -42,7 +42,7 @@ if ($request->isPost() && check_bitrix_sessid()) {
 
     if ($request->getPost("action") === "level") {
         $levelId = (int)$request->getPost("level_id");
-        LevelService::setLevelByAdmin($userId, $levelId, 'admin');
+        LevelService::setLevelByAdmin($userId, $levelId);
     }
 }
 
@@ -50,7 +50,8 @@ if ($request->isPost() && check_bitrix_sessid()) {
 // ДАННЫЕ
 // ======================
 $usersResult = UserTable::getList([
-        'select' => ['ID', 'NAME', 'LAST_NAME', 'EMAIL']
+    'select' => ['ID', 'NAME', 'LAST_NAME', 'EMAIL'],
+    'order' => ['ID' => 'ASC'],
 ]);
 
 $levels = LevelService::getAllLevels();
@@ -60,11 +61,7 @@ $levels = LevelService::getAllLevels();
 // ======================
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 
-\Bitrix\Main\UI\Extension::load([
-        'ui.dialogs.messagebox',
-        'ui.buttons',
-        'ui.forms'
-]);
+\Bitrix\Main\UI\Extension::load(['ui.dialogs.messagebox', 'ui.buttons', 'ui.forms']);
 
 $APPLICATION->AddHeadString('<script>
 BX.message({
@@ -80,16 +77,15 @@ BX.message({
 </script>', true);
 
 $sTableID = "tbl_loyalty_users";
-$oSort = new CAdminSorting($sTableID, "ID", "asc");
+$oSort = new CAdminSorting($sTableID, "ID", "ASC");
 $lAdmin = new CAdminList($sTableID, $oSort);
-
 $lAdmin->AddHeaders([
         ["id" => "ID", "content" => Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_ID"), "default" => true],
         ["id" => "NAME", "content" => Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_NAME"), "default" => true],
         ["id" => "EMAIL", "content" => Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_EMAIL"), "default" => true],
         ["id" => "BONUS", "content" => Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_BONUS"), "default" => true],
         ["id" => "LEVEL", "content" => Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_LEVEL"), "default" => true],
-        ["id" => "ACTIONS", "content" => Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_ACTIONS"), "default" => true],
+        ["id" => "EVENT", "content" => Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_EVENT"), "default" => true],
 ]);
 
 while ($user = $usersResult->fetch()) {
@@ -108,22 +104,24 @@ while ($user = $usersResult->fetch()) {
     $row->AddField("ID", $userId);
     $row->AddField("NAME", htmlspecialcharsbx($user['NAME']." ".$user['LAST_NAME']));
     $row->AddField("EMAIL", htmlspecialcharsbx($user['EMAIL']));
+
     $bonusDisplay = $available;
     if ($pending > 0) {
         $bonusDisplay .= "<span> (+{$pending})</span>";
     }
+
     $row->AddField("BONUS", $bonusDisplay .
             ' <button type="button" onclick="openBonusPopup('.$userId.')" title="'.Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_EDIT").'">✏️</button>'
     );
     $row->AddField("LEVEL", $levelName .
             ' <button type="button" onclick="openLevelPopup('.$userId.', '.$levelId.')" title="'.Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_EDIT").'">✏️</button>'
     );
-    $row->AddField("ACTIONS",
-            '<button type="button" onclick="openRewardPopup('.$userId.')" title="'.Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_AWARD").'">🎁</button>
-            <button type="button" onclick="openUserInfo('.$userId.')" title="'.Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_INFO").'">📄</button>'
+    $row->AddField("EVENT",
+            '<button type="button" onclick="openRewardPopup('.$userId.')" title="'.Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_AWARD").'">🎁</button>'
     );
 }
 
+$lAdmin->AddAdminContextMenu([]);
 $lAdmin->DisplayList();
 ?>
 
@@ -229,10 +227,6 @@ function openRewardPopup(userId) {
     });
 }
 
-function openUserInfo(userId) {
-    window.location.href = 'menu_history.php';
-    //window.location.href = 'menu_history.php?user_id=' + userId;
-}
 </script>
 
 <?php

@@ -27,6 +27,10 @@ return [
             "url" => "menu_history.php",
         ],
         [
+            "text" => Loc::getMessage("LEGACY_LOYALTY_MENU_LOG"),
+            "url" => "menu_log.php",
+        ],
+        [
             "text" => Loc::getMessage("LEGACY_LOYALTY_MENU_MANUAL"),
             "url" => "menu_manual.php",
         ],
