@@ -13,7 +13,6 @@ $MESS["LEGACY_LOYALTY_SCOPE"] = "Область применения";
 $MESS["LEGACY_LOYALTY_SCOPE_PRODUCT"] = "товар";
 $MESS["LEGACY_LOYALTY_SCOPE_ORDER"] = "заказ";
 $MESS["LEGACY_LOYALTY_AMOUNT_TYPE"] = "Тип значения";
-// добавить % или фикс из файла
 $MESS["LEGACY_LOYALTY_AMOUNT_TYPE_PERCENT"] = "% от стоимости";
 $MESS["LEGACY_LOYALTY_AMOUNT_TYPE_FIXED"] = "фиксированное значение";
 

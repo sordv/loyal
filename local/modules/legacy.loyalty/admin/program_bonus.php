@@ -105,14 +105,14 @@ function renderRuleCard($rule, $type, $APPLICATION) {
             . (is_array($rule['CONDITIONS'] ?? null) ? count($rule['CONDITIONS']) : 0);
 ?>
 
-<div style="margin-bottom: 12px; background: #fff; border: 1px solid #e0e0e0; border-radius: 4px; padding: 12px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; font-size:12px; color:#666;">
+<div class="leglol-rule-card">
+    <div class="leglol-rule-header">
         <div>
             <span title="<?= $statusTitle ?>"><?= $statusEmoji ?></span>
-            <span style="margin-left: 8px;"><?= Loc::getMessage("LEGACY_LOYALTY_VIEW_PRIORITY") ?><b><?= (int)$rule['SORT'] ?></b></span>
-            <span style="margin-left: 8px;"><?= Loc::getMessage("LEGACY_LOYALTY_VIEW_SCOPE") ?><b><?= $scope ?></b></span>
+            <span class="leglol-rule-left"><?= Loc::getMessage("LEGACY_LOYALTY_VIEW_PRIORITY") ?><b><?= (int)$rule['SORT'] ?></b></span>
+            <span class="leglol-rule-left"><?= Loc::getMessage("LEGACY_LOYALTY_VIEW_SCOPE") ?><b><?= $scope ?></b></span>
         </div>
-        <div style="display: flex; gap: 8px;">
+        <div class="leglol-rule-actions">
             <a href="bonus_rule_edit.php?ID=<?= $rule['ID'] ?>&lang=<?= LANG ?>"
                 class="adm-btn adm-btn-save">
                 <?= Loc::getMessage("LEGACY_LOYALTY_EDIT_RULE_BTN") ?>
@@ -129,11 +129,11 @@ function renderRuleCard($rule, $type, $APPLICATION) {
             </a>
         </div>
     </div>
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 8px;">
-        <strong style="font-size: 14px;">
+    <div class="leglol-amount-block">
+        <strong class="leglol-14px">
             <?= $prefix ?> <span><?= (int)$rule['AMOUNT'] ?></span> <?= $amountType ?>
         </strong>
-        <span style="font-size:12px; color:#888; background:#f5f5f5; padding:4px 8px; border-radius:3px;">
+        <span class="leglol-conditions-badge">
             <?= $conditionsInfo ?>
         </span>
     </div>
@@ -150,14 +150,14 @@ function renderRuleCard($rule, $type, $APPLICATION) {
     $tabControl->BeginNextTab();
     ?>
 
-    <div style="margin-bottom: 20px;">
+    <div class="leglol-margin20">
         <a href="bonus_rule_edit.php?TYPE=add&lang=<?=LANG?>" class="adm-btn adm-btn-green">
             <?=Loc::getMessage("LEGACY_LOYALTY_ADD_NEW_RULE")?>
         </a>
     </div>
 
     <?php if (empty($addRules)): ?>
-        <div style="padding: 20px; background: #f9f9f9; border: 1px dashed #ccc; border-radius: 4px; color: #666;">
+        <div class="leglol-rules">
             <?=Loc::getMessage("LEGACY_LOYALTY_NO_RULES")?>
         </div>
     <?php else:
@@ -171,14 +171,14 @@ function renderRuleCard($rule, $type, $APPLICATION) {
     $tabControl->BeginNextTab();
     ?>
 
-    <div style="margin-bottom: 20px;">
+    <div class="leglol-margin20">
         <a href="bonus_rule_edit.php?TYPE=spend&lang=<?=LANG?>" class="adm-btn adm-btn-green">
             <?=Loc::getMessage("LEGACY_LOYALTY_ADD_NEW_RULE")?>
         </a>
     </div>
 
     <?php if (empty($spendRules)): ?>
-        <div style="padding: 20px; background: #f9f9f9; border: 1px dashed #ccc; border-radius: 4px; color: #666;">
+        <div class="leglol-rules">
             <?=Loc::getMessage("LEGACY_LOYALTY_NO_RULES")?>
         </div>
     <?php else:
@@ -219,5 +219,63 @@ function renderRuleCard($rule, $type, $APPLICATION) {
     ?>
 </form>
 
+<style>
+    .leglol-rule-card {
+        margin-bottom: 12px;
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        padding: 12px;
+    }
+
+    .leglol-rule-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 12px;
+        color: #666;
+    }
+
+    .leglol-rule-left {
+        margin-left: 8px;
+    }
+    .leglol-rule-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .leglol-amount-block {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .leglol-14px {
+        font-size: 14px;
+    }
+
+    .leglol-margin20 {
+        margin-bottom: 20px;
+    }
+
+    .leglol-conditions-badge {
+        font-size: 12px;
+        color: #888;
+        background: #f5f5f5;
+        padding: 4px 8px;
+        border-radius: 3px;
+    }
+
+    .leglol-rules {
+        padding: 20px;
+        background: #f9f9f9;
+        border: 1px dashed #ccc;
+        border-radius: 4px;
+        color: #666;
+    }
+</style>
 <?php
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

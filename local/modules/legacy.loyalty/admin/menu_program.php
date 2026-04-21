@@ -79,8 +79,8 @@ while ($program = $result->fetch()) {
     $row->AddViewField(
         "ACTIVE",
         $program['ACTIVE'] === 'Y'
-            ? '<span style="color:green;">Включена</span>'
-            : '<span style="color:red;">Выключена</span>'
+            ? '<span class="leglol-active">Включена</span>'
+            : '<span class="leglol-inactive">Выключена</span>'
     );
 
     $actions = [];
@@ -122,4 +122,15 @@ if ($message) {
 
 $lAdmin->DisplayList();
 
+?>
+<style>
+    .leglol-active {
+        color: green;
+    }
+
+    .leglol-inactive {
+        color: red;
+    }
+</style>
+<?php
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

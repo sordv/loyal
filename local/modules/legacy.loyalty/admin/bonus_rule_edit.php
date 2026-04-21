@@ -89,7 +89,7 @@ $tabControl = new CAdminTabControl("tabControl", $aTabs);
     </tr>
     <tr>
         <td><?= Loc::getMessage("LEGACY_LOYALTY_SORT") ?></td>
-        <td><input type="number" name="SORT" value="<?= (int)$arRule['SORT'] ?>" style="width: 80px;"></td>
+        <td><input type="number" name="SORT" value="<?= (int)$arRule['SORT'] ?>" class="leglol-numeric-input"></td>
     </tr>
     <tr>
         <td><?= Loc::getMessage("LEGACY_LOYALTY_RULE_TYPE") ?></td>
@@ -132,7 +132,7 @@ $tabControl = new CAdminTabControl("tabControl", $aTabs);
     </tr>
     <tr>
         <td><?= Loc::getMessage("LEGACY_LOYALTY_AMOUNT") ?></td>
-        <td><input type="number" name="AMOUNT" value="<?= (int)$arRule['AMOUNT'] ?>" style="width: 120px;"></td>
+        <td><input type="number" name="AMOUNT" value="<?= (int)$arRule['AMOUNT'] ?>" class="leglol-numeric-input"></td>
     </tr>
 
         <!-- условия - выводим как обычную строку таблицы, без BeginCustomField -->
@@ -141,7 +141,7 @@ $tabControl = new CAdminTabControl("tabControl", $aTabs);
     </tr>
     <tr>
         <td colspan="2">
-            <div id="condition-tree-container" style="background: #f9f9f9; padding: 15px; border: 1px solid #e5e5e5; border-radius: 4px; min-height: 100px;"></div>
+            <div id="condition-tree-container" class="leglol-cond"></div>
             <input type="hidden" name="CONDITIONS" id="input-conditions" value="<?= htmlspecialcharsbx(Json::encode($arRule['CONDITIONS'] ?? [])) ?>">
         </td>
     </tr>
@@ -174,5 +174,18 @@ $tabControl = new CAdminTabControl("tabControl", $aTabs);
     ?>
 </form>
 
+<style>
+    .leglol-numeric-input {
+        width: 120px;
+    }
+
+    .leglol-cond {
+        background: #f9f9f9;
+        padding: 15px;
+        border: 1px solid #e5e5e5;
+        border-radius: 4px;
+        min-height: 100px;
+    }
+</style>
 <?php
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");

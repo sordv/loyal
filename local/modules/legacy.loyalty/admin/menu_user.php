@@ -111,13 +111,13 @@ while ($user = $usersResult->fetch()) {
     }
 
     $row->AddField("BONUS", $bonusDisplay .
-            ' <button type="button" onclick="openBonusPopup('.$userId.')" title="'.Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_EDIT").'">✏️</button>'
+            ' <button type="button" class="leglol-open-popup" onclick="openBonusPopup('.$userId.')" title="'.Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_EDIT").'">✏️</button>'
     );
     $row->AddField("LEVEL", $levelName .
-            ' <button type="button" onclick="openLevelPopup('.$userId.', '.$levelId.')" title="'.Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_EDIT").'">✏️</button>'
+            ' <button type="button" class="leglol-open-popup" onclick="openLevelPopup('.$userId.', '.$levelId.')" title="'.Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_EDIT").'">✏️</button>'
     );
     $row->AddField("EVENT",
-            '<button type="button" onclick="openRewardPopup('.$userId.')" title="'.Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_AWARD").'">🎁</button>'
+            '<button type="button" class="leglol-open-popup" onclick="openRewardPopup('.$userId.')" title="'.Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_AWARD").'">🎁</button>'
     );
 }
 
@@ -137,11 +137,11 @@ function openBonusPopup(userId) {
                 <input type="hidden" name="sessid" value="<?=bitrix_sessid()?>">
 
                 <div>
-                    <span id="bonusTypeToggle" style="cursor:pointer;color:#2f80ed;text-decoration:underline;">
+                    <span id="bonusTypeToggle" class="leglol-bonus-popup-switch">
                         ${BX.message('ADD')}
                     </span>
                 </div>
-                <input type="number" name="amount" placeholder="${BX.message('AMOUNT')}" style="width:100%;" required min="1">
+                <input type="number" name="amount" placeholder="${BX.message('AMOUNT')}" class="leglol-chooser" required min="1">
             </form>
         `,
         buttons: BX.UI.Dialogs.MessageBoxButtons.OK,
@@ -204,7 +204,7 @@ function openLevelPopup(userId, currentLevelId) {
             <form method="post">
                 <input type="hidden" name="action" value="level">
                 <input type="hidden" name="user_id" value="${userId}">
-                <select name="level_id" style="width:100%;">
+                <select name="level_id" class="leglol-chooser">
                     ${options}
                 </select>
                 <div><?=bitrix_sessid_post()?></div>
@@ -229,5 +229,20 @@ function openRewardPopup(userId) {
 
 </script>
 
+<style>
+    .leglol-bonus-popup-switch {
+        cursor: pointer;
+        color: #2f80ed;
+        text-decoration: underline;
+    }
+
+    .leglol-chooser{
+        width: 100%;
+    }
+
+    .leglol-open-popup {
+        cursor: pointer;
+    }
+</style>
 <?php
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/epilog_admin.php");
