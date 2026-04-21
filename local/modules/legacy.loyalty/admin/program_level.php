@@ -12,6 +12,7 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_aft
 
 $aTabs = [
     ["DIV" => "rules", "TAB" => Loc::getMessage("LEGACY_LOYALTY_TAB_RULE"), "TITLE" => Loc::getMessage("LEGACY_LOYALTY_TAB_RULE")],
+    ["DIV" => "settings", "TAB" => Loc::getMessage("LEGACY_LOYALTY_TAB_SETTINGS"), "TITLE" => Loc::getMessage("LEGACY_LOYALTY_TAB_SETTINGS")],
 ];
 
 $tabControl = new CAdminTabControl("tabControl", $aTabs);
@@ -23,6 +24,13 @@ $tabControl = new CAdminTabControl("tabControl", $aTabs);
     $tabControl->BeginNextTab();
     ?>
     <p>Тут будут правила уровней</p>
+    <?php
+    $tabControl->EndTab();
+    $tabControl->BeginNextTab();
+    ?>
+
+    <p>Тут будут базовые настройки</p>
+
     <?php
     $tabControl->EndTab();
     $tabControl->Buttons([
