@@ -44,8 +44,8 @@ if ($request->isPost() && check_bitrix_sessid() && $request->getPost('save_setti
 }
 
 $bonusName = Option::get("legacy.loyalty", "bonus_name", "Бонусы");
-$bonusLifetime = Option::get("legacy.loyalty", "bonus_lifetime", "30");
-$bonusDelay = Option::get("legacy.loyalty", "bonus_delay", "0");
+$bonusLifetime = Option::get("legacy.loyalty", "bonus_lifetime", "365");
+$bonusDelay = Option::get("legacy.loyalty", "bonus_delay", "1");
 
 $addRules = [];
 $spendRules = [];

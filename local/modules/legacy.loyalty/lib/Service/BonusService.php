@@ -9,8 +9,8 @@ use Bitrix\Main\Application;
 class BonusService {
     private static function getSettings() {
         return [
-            'lifetime' => max(0, (int)Option::get("legacy.loyalty", "bonus_lifetime", 30)),
-            'delay' => max(0, (int)Option::get("legacy.loyalty", "bonus_delay", 0)),
+            'lifetime' => max(0, (int)Option::get("legacy.loyalty", "bonus_lifetime", 365)),
+            'delay' => max(0, (int)Option::get("legacy.loyalty", "bonus_delay", 1)),
         ];
     }
 
