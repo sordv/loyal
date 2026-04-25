@@ -100,9 +100,6 @@ function renderRuleCard($rule, $type, $APPLICATION) {
             ? 'LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_PERCENT'
             : 'LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_FIXED';
     $amountType = Loc::getMessage($amountTypeKey);
-
-    $conditionsInfo = Loc::getMessage("LEGACY_LOYALTY_VIEW_CONDITIONS")
-            . (is_array($rule['CONDITIONS'] ?? null) ? count($rule['CONDITIONS']) : 0);
 ?>
 
 <div class="leglol-rule-card">
@@ -133,9 +130,6 @@ function renderRuleCard($rule, $type, $APPLICATION) {
         <strong class="leglol-14px">
             <?= $prefix ?> <span><?= (int)$rule['AMOUNT'] ?></span> <?= $amountType ?>
         </strong>
-        <span class="leglol-conditions-badge">
-            <?= $conditionsInfo ?>
-        </span>
     </div>
 </div>
 
@@ -259,14 +253,6 @@ function renderRuleCard($rule, $type, $APPLICATION) {
 
     .leglol-margin20 {
         margin-bottom: 20px;
-    }
-
-    .leglol-conditions-badge {
-        font-size: 12px;
-        color: #888;
-        background: #f5f5f5;
-        padding: 4px 8px;
-        border-radius: 3px;
     }
 
     .leglol-rules {

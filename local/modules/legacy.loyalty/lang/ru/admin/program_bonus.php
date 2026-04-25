@@ -26,7 +26,6 @@ $MESS["LEGACY_LOYALTY_VIEW_SCOPE_PRODUCT"] = "Товар";
 $MESS["LEGACY_LOYALTY_VIEW_SCOPE_ORDER"] = "Заказ";
 $MESS["LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_PERCENT"] = "% бонусами";
 $MESS["LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_FIXED"] = "бонусов";
-$MESS["LEGACY_LOYALTY_VIEW_CONDITIONS"] = "Условий: ";
 
 // Общие для программы настройки
 $MESS["LEGACY_LOYALTY_BONUS_NAME"] = "Название бонусов:";

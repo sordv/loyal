@@ -47,9 +47,11 @@ Class legacy_loyalty extends CModule {
     }
 
     function InstallEvents() {
+        /*
         require_once __DIR__ . '/../lib/Service/BonusService.php';
         require_once __DIR__ . '/../lib/EventHandler/BonusHandler.php';
         \Legacy\Loyalty\EventHandler\BonusHandler::registerAgents();
+        */
 
         return true;
     }
@@ -72,9 +74,11 @@ Class legacy_loyalty extends CModule {
     }
 
     function UnInstallEvents() {
+        /*
         require_once __DIR__ . '/../lib/Service/BonusService.php';
         require_once __DIR__ . '/../lib/EventHandler/BonusHandler.php';
         \Legacy\Loyalty\EventHandler\BonusHandler::unregisterAgents();
+        */
 
         return true;
     }
@@ -83,7 +87,7 @@ Class legacy_loyalty extends CModule {
         global $APPLICATION;
 
         $this->InstallDB();
-        //$this->InstallEvents();
+        $this->InstallEvents();
         $this->InstallFiles();
 
         ModuleManager::registerModule($this->MODULE_ID);
@@ -99,7 +103,7 @@ Class legacy_loyalty extends CModule {
             $APPLICATION->IncludeAdminFile(Loc::getMessage("LEGACY_LOYALTY_UNINSTALL_TITLE"), __DIR__ . "/unstep1.php");
         } elseif($request["step"]==2) {
             $this->UnInstallFiles();
-            //$this->UnInstallEvents();
+            $this->UnInstallEvents();
 
             if($request["savedata"] != "Y")
                 $this->UnInstallDB();

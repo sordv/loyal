@@ -3,6 +3,9 @@ $MESS["LEGACY_LOYALTY_ADD_RULE"] = "Добавление правила";
 $MESS["LEGACY_LOYALTY_EDIT_RULE"] = "Редактирование правила";
 
 $MESS["LEGACY_LOYALTY_RULE_TAB"] = "Настройки правила";
+$MESS["LEGACY_LOYALTY_CONDITIONS_PARSE_ERROR"] = "Условия не сохранены!";
+$MESS["LEGACY_LOYALTY_CONDITIONS_PARSE_ERROR_DETAILS"] = "Обнаружены невалидные значения в условиях. Валидные условия сохранены.";
+$MESS["LEGACY_LOYALTY_CONDITIONS_INIT_ERROR"] = "Ошибка инициализации конструктора условий!";
 
 $MESS["LEGACY_LOYALTY_ACTIVE"] = "Активно";
 $MESS["LEGACY_LOYALTY_SORT"] = "Приоритет (сортировка)";
