@@ -17,8 +17,8 @@ $MESS["LEGACY_LOYALTY_DELETE_RULE_BTN"] = "Удалить";
 $MESS["LEGACY_LOYALTY_CONFIRM_DELETE_RULE"] = "Вы действительно хотите удалить это правило?";
 
 $MESS["LEGACY_LOYALTY_VIEW_ACTIVE"] = "Активно";
-$MESS["LEGACY_LOYALTY_VIEW_PRIORITY"] = "Приоритет: ";
 $MESS["LEGACY_LOYALTY_VIEW_INACTIVE"] = "Не активно";
+$MESS["LEGACY_LOYALTY_VIEW_PRIORITY"] = "Приоритет: ";
 $MESS["LEGACY_LOYALTY_VIEW_ADD"] = "Начислять";
 $MESS["LEGACY_LOYALTY_VIEW_SPEND"] = "Списывать до";
 $MESS["LEGACY_LOYALTY_VIEW_SCOPE"] = "Область применения: ";

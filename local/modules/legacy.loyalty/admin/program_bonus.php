@@ -6,7 +6,6 @@ use Bitrix\Main\Config\Option;
 use Bitrix\Main\Application;
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
-
 Loc::loadMessages($_SERVER["DOCUMENT_ROOT"]."/local/modules/legacy.loyalty/admin/program_bonus.php");
 
 $APPLICATION->SetTitle(Loc::getMessage("LEGACY_LOYALTY_TYPE_BONUS"));
@@ -78,7 +77,7 @@ $aTabs = [
 
 $tabControl = new CAdminTabControl("tabControl", $aTabs);
 
-function renderRuleCard($rule, $type, $APPLICATION) {
+function renderBonusRuleCard($rule, $type, $APPLICATION) {
     $isActive = ($rule['ACTIVE'] ?? '') === 'Y';
     $statusKey = $isActive
             ? 'LEGACY_LOYALTY_VIEW_ACTIVE'
@@ -151,12 +150,10 @@ function renderRuleCard($rule, $type, $APPLICATION) {
     </div>
 
     <?php if (empty($addRules)): ?>
-        <div class="leglol-rules">
-            <?=Loc::getMessage("LEGACY_LOYALTY_NO_RULES")?>
-        </div>
+        <div class="leglol-rules"><?=Loc::getMessage("LEGACY_LOYALTY_NO_RULES")?></div>
     <?php else:
         foreach ($addRules as $rule):
-            renderRuleCard($rule, 'add', $APPLICATION);
+            renderBonusRuleCard($rule, 'add', $APPLICATION);
         endforeach;
     endif; ?>
 
@@ -177,7 +174,7 @@ function renderRuleCard($rule, $type, $APPLICATION) {
         </div>
     <?php else:
         foreach ($spendRules as $rule):
-            renderRuleCard($rule, 'spend', $APPLICATION);
+            renderBonusRuleCard($rule, 'spend', $APPLICATION);
         endforeach;
     endif; ?>
 
