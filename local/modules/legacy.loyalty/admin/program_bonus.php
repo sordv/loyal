@@ -99,6 +99,11 @@ function renderBonusRuleCard($rule, $type, $APPLICATION) {
             ? 'LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_PERCENT'
             : 'LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_FIXED';
     $amountType = Loc::getMessage($amountTypeKey);
+
+    $amountValue = (int)$rule['AMOUNT'];
+    $amountDisplay = $rule['AMOUNT_TYPE'] === 'percent'
+        ? "{$amountValue}" . Loc::getMessage("LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_PERCENT")
+        : "{$amountValue}" . Loc::getMessage("LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_FIXED")
 ?>
 
 <div class="leglol-rule-card">
@@ -107,6 +112,9 @@ function renderBonusRuleCard($rule, $type, $APPLICATION) {
             <span title="<?= $statusTitle ?>"><?= $statusEmoji ?></span>
             <span class="leglol-rule-left"><?= Loc::getMessage("LEGACY_LOYALTY_VIEW_PRIORITY") ?><b><?= (int)$rule['SORT'] ?></b></span>
             <span class="leglol-rule-left"><?= Loc::getMessage("LEGACY_LOYALTY_VIEW_SCOPE") ?><b><?= $scope ?></b></span>
+            <span class="leglol-rule-left leglol-amount-in-header">
+                <?= $prefix ?>: <b><?= $amountDisplay ?></b>
+            </span>
         </div>
         <div class="leglol-rule-actions">
             <a href="bonus_rule_edit.php?ID=<?= $rule['ID'] ?>&lang=<?= LANG ?>"
@@ -127,7 +135,7 @@ function renderBonusRuleCard($rule, $type, $APPLICATION) {
     </div>
     <div class="leglol-amount-block">
         <strong class="leglol-14px">
-            <?= $prefix ?> <span><?= (int)$rule['AMOUNT'] ?></span> <?= $amountType ?>
+            <?= htmlspecialcharsbx($rule['NAME'] ?: '-') ?>
         </strong>
     </div>
 </div>
@@ -258,6 +266,18 @@ function renderBonusRuleCard($rule, $type, $APPLICATION) {
         border: 1px dashed #ccc;
         border-radius: 4px;
         color: #666;
+    }
+
+    .leglol-amount-in-header {
+        margin-left: 12px;
+        padding-left: 12px;
+        border-left: 1px solid #e0e0e0;
+        color: #333;
+        font-weight: 500;
+    }
+
+    .leglol-amount-in-header b {
+        color: #0d6610;
     }
 </style>
 <?php

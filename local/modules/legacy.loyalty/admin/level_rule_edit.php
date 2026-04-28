@@ -77,10 +77,10 @@ if ($request->isPost() && check_bitrix_sessid()) {
 
     // Валидация обязательных полей
     if (empty($arFields['NAME'])) {
-        $message = new CAdminMessage([
+        $message = [
             "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_LEVEL_NAME_REQUIRED"),
             "TYPE" => "ERROR"
-        ]);
+        ];
     } else {
         $res = $ID > 0
             ? LevelRuleTable::update($ID, $arFields)
@@ -102,7 +102,10 @@ if ($request->isPost() && check_bitrix_sessid()) {
 
             LocalRedirect($baseUrl . $redirectParams);
         } else {
-            $message = new CAdminMessage(["MESSAGE" => implode("<br>", $res->getErrorMessages()), "TYPE" => "ERROR"]);
+            $message = [
+                "MESSAGE" => implode("<br>", $res->getErrorMessages()),
+                "TYPE" => "ERROR"
+            ];
         }
     }
 }
@@ -144,7 +147,10 @@ $boolCond = $obCond->Init(BT_COND_MODE_DEFAULT, BT_COND_BUILD_USER, $arCondParam
     <?=bitrix_sessid_post()?>
     <input type="hidden" name="ID" value="<?= $ID ?>">
 
-    <?php $tabControl->Begin(); $tabControl->BeginNextTab(); ?>
+    <?php
+    $tabControl->Begin();
+    $tabControl->BeginNextTab();
+    ?>
 
     <!-- Активно -->
     <tr>
@@ -162,7 +168,7 @@ $boolCond = $obCond->Init(BT_COND_MODE_DEFAULT, BT_COND_BUILD_USER, $arCondParam
         </td>
     </tr>
 
-    <!-- Название уровня -->
+    <!-- Название -->
     <tr>
         <td><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_NAME") ?> <span style="color:#c00">*</span></td>
         <td>

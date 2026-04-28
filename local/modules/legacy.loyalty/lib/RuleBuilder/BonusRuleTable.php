@@ -16,6 +16,7 @@ class BonusRuleTable extends DataManager {
             new IntegerField('ID', ['primary' => true, 'autocomplete' => true]),
             new IntegerField('SORT', ['default' => 100]),
             new StringField('ACTIVE', ['default' => 'Y', 'values' => ['Y', 'N']]),
+            new StringField('NAME', ['required' => true, 'size' => 255]),
             new StringField('TYPE', ['values' => ['add', 'spend']]),
             new StringField('APPLY_TYPE', ['values' => ['product', 'order']]),
             new StringField('AMOUNT_TYPE', ['values' => ['percent', 'fixed']]),

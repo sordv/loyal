@@ -20,6 +20,7 @@ if (empty($arRule)) {
     $arRule['TYPE'] = $request->get("TYPE") ?: 'add';
     $arRule['ACTIVE'] = 'Y';
     $arRule['SORT'] = 100;
+    $arRule['NAME'] = '';
     $arRule['APPLY_TYPE'] = 'product';
     $arRule['AMOUNT_TYPE'] = 'percent';
     $arRule['AMOUNT'] = 0;
@@ -71,32 +72,44 @@ if ($request->isPost() && check_bitrix_sessid()) {
         "ACTIVE" => $request->getPost("ACTIVE") === "Y" ? "Y" : "N",
         "SORT" => (int)$request->getPost("SORT"),
         "TYPE" => $request->getPost("TYPE"),
+        "NAME" => trim($request->getPost("NAME")),
         "APPLY_TYPE" => $request->getPost("APPLY_TYPE"),
         "AMOUNT_TYPE" => $request->getPost("AMOUNT_TYPE"),
         "AMOUNT" => (int)$request->getPost("AMOUNT"),
         "CONDITIONS" => $conditionsToSave,
     ];
 
-    $res = $ID > 0
-        ? BonusRuleTable::update($ID, $arFields)
-        : BonusRuleTable::add($arFields);
+    // Валидация обязательных полей
+    if (empty($arFields['NAME'])) {
+        $message = [
+            "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_RULE_NAME_REQUIRED"),
+            "TYPE" => "ERROR"
+        ];
+    } else {
+        $res = $ID > 0
+            ? BonusRuleTable::update($ID, $arFields)
+            : BonusRuleTable::add($arFields);
 
-    if ($res->isSuccess() && !$ID) {
-        $ID = $res->getId();
-    }
-
-    if ($res->isSuccess()) {
-        $redirectParams = "&lang=" . LANG;
-        if ($parseError) {
-            $redirectParams .= "&cond_error=1";
+        if ($res->isSuccess() && !$ID) {
+            $ID = $res->getId();
         }
 
-        LocalRedirect($request->getPost("apply")
-            ? "bonus_rule_edit.php?ID=" . $ID . $redirectParams
-            : "program_bonus.php?lang=" . LANG . ($parseError ? "&cond_error=1" : "")
-        );
-    } else {
-        $message = new CAdminMessage(["MESSAGE" => implode("<br>", $res->getErrorMessages()), "TYPE" => "ERROR"]);
+        if ($res->isSuccess()) {
+            $redirectParams = "&lang=" . LANG;
+            if ($parseError) {
+                $redirectParams .= "&cond_error=1";
+            }
+
+            LocalRedirect($request->getPost("apply")
+                ? "bonus_rule_edit.php?ID=" . $ID . $redirectParams
+                : "program_bonus.php?lang=" . LANG . ($parseError ? "&cond_error=1" : "")
+            );
+        } else {
+            $message = [
+                "MESSAGE" => implode("<br>", $res->getErrorMessages()),
+                "TYPE" => "ERROR"
+            ];
+        }
     }
 }
 
@@ -136,20 +149,86 @@ $boolCond = $obCond->Init(BT_COND_MODE_DEFAULT, BT_COND_BUILD_SALE, $arCondParam
     <?=bitrix_sessid_post()?>
     <input type="hidden" name="ID" value="<?= $ID ?>">
 
-    <?php $tabControl->Begin(); $tabControl->BeginNextTab(); ?>
+    <?php
+    $tabControl->Begin();
+    $tabControl->BeginNextTab();
+    ?>
 
-    <tr><td width="40%"><?= Loc::getMessage("LEGACY_LOYALTY_ACTIVE") ?></td><td width="60%"><input type="checkbox" name="ACTIVE" value="Y" <?= ($arRule['ACTIVE'] === 'Y' ? 'checked' : '') ?>></td></tr>
-    <tr><td><?= Loc::getMessage("LEGACY_LOYALTY_SORT") ?></td><td><input type="number" name="SORT" value="<?= (int)$arRule['SORT'] ?>" class="leglol-numeric-input"></td></tr>
-    <tr><td><?= Loc::getMessage("LEGACY_LOYALTY_RULE_TYPE") ?></td><td>
-            <select name="TYPE"><option value="add" <?= ($arRule['TYPE'] === 'add' ? 'selected' : '') ?>><?= Loc::getMessage("LEGACY_LOYALTY_TYPE_ADD") ?></option><option value="spend" <?= ($arRule['TYPE'] === 'spend' ? 'selected' : '') ?>><?= Loc::getMessage("LEGACY_LOYALTY_TYPE_SPEND") ?></option></select>
+    <!-- Активно -->
+    <tr>
+        <td width="40%"><?= Loc::getMessage("LEGACY_LOYALTY_RULE_ACTIVE") ?></td>
+        <td width="60%">
+            <input type="checkbox" name="ACTIVE" value="Y" <?= ($arRule['ACTIVE'] === 'Y' ? 'checked' : '') ?>>
+        </td>
+    </tr>
+
+    <!-- Приоритет -->
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_RULE_SORT") ?></td>
+        <td>
+            <input type="number" name="SORT" value="<?= (int)$arRule['SORT'] ?>" class="leglol-numeric-input">
+        </td>
+    </tr>
+
+    <!-- Название -->
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_RULE_NAME") ?> <span style="color:#c00">*</span></td>
+        <td>
+            <input type="text" name="NAME" value="<?= htmlspecialcharsbx($arRule['NAME']) ?>" style="width:100%;max-width:400px;">
+        </td>
+    </tr>
+
+    <!-- Тип: начисление/списание -->
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_RULE_TYPE") ?></td>
+        <td>
+            <select name="TYPE">
+                <option value="add" <?= ($arRule['TYPE'] === 'add' ? 'selected' : '') ?>>
+                    <?= Loc::getMessage("LEGACY_LOYALTY_RULE_TYPE_ADD") ?>
+                </option>
+                <option value="spend" <?= ($arRule['TYPE'] === 'spend' ? 'selected' : '') ?>>
+                    <?= Loc::getMessage("LEGACY_LOYALTY_RULE_TYPE_SPEND") ?>
+                </option>
+            </select>
+        </td>
+    </tr>
+
+    <!-- Тип: товар/заказ -->
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_RULE_SCOPE") ?></td>
+        <td>
+            <select name="APPLY_TYPE">
+                <option value="product" <?= ($arRule['APPLY_TYPE'] === 'product' ? 'selected' : '') ?>>
+                    <?= Loc::getMessage("LEGACY_LOYALTY_RULE_SCOPE_PRODUCT") ?>
+                </option>
+                <option value="order" <?= ($arRule['APPLY_TYPE'] === 'order' ? 'selected' : '') ?>>
+                    <?= Loc::getMessage("LEGACY_LOYALTY_RULE_SCOPE_ORDER") ?>
+                </option>
+            </select>
+        </td>
+    </tr>
+
+    <!-- Тип: процент/фикс -->
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_RULE_AMOUNT_TYPE") ?></td>
+        <td>
+            <select name="AMOUNT_TYPE">
+                <option value="percent" <?= ($arRule['AMOUNT_TYPE'] === 'percent' ? 'selected' : '') ?>>
+                    <?= Loc::getMessage("LEGACY_LOYALTY_RULE_AMOUNT_TYPE_PERCENT") ?>
+                </option>
+                <option value="fixed" <?= ($arRule['AMOUNT_TYPE'] === 'fixed' ? 'selected' : '') ?>>
+                    <?= Loc::getMessage("LEGACY_LOYALTY_RULE_AMOUNT_TYPE_FIXED") ?>
+                </option>
+            </select>
         </td></tr>
-    <tr><td><?= Loc::getMessage("LEGACY_LOYALTY_SCOPE") ?></td><td>
-            <select name="APPLY_TYPE"><option value="product" <?= ($arRule['APPLY_TYPE'] === 'product' ? 'selected' : '') ?>><?= Loc::getMessage("LEGACY_LOYALTY_SCOPE_PRODUCT") ?></option><option value="order" <?= ($arRule['APPLY_TYPE'] === 'order' ? 'selected' : '') ?>><?= Loc::getMessage("LEGACY_LOYALTY_SCOPE_ORDER") ?></option></select>
-        </td></tr>
-    <tr><td><?= Loc::getMessage("LEGACY_LOYALTY_AMOUNT_TYPE") ?></td><td>
-            <select name="AMOUNT_TYPE"><option value="percent" <?= ($arRule['AMOUNT_TYPE'] === 'percent' ? 'selected' : '') ?>><?= Loc::getMessage("LEGACY_LOYALTY_AMOUNT_TYPE_PERCENT") ?></option><option value="fixed" <?= ($arRule['AMOUNT_TYPE'] === 'fixed' ? 'selected' : '') ?>><?= Loc::getMessage("LEGACY_LOYALTY_AMOUNT_TYPE_FIXED") ?></option></select>
-        </td></tr>
-    <tr><td><?= Loc::getMessage("LEGACY_LOYALTY_AMOUNT") ?></td><td><input type="number" name="AMOUNT" value="<?= (int)$arRule['AMOUNT'] ?>" class="leglol-numeric-input"></td></tr>
+
+    <!-- Значение -->
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_AMOUNT") ?></td>
+        <td>
+            <input type="number" name="AMOUNT" value="<?= (int)$arRule['AMOUNT'] ?>" class="leglol-numeric-input">
+        </td>
+    </tr>
 
     <tr class="heading"><td colspan="2"><?= Loc::getMessage("LEGACY_LOYALTY_CONDITIONS") ?></td></tr>
     <tr><td colspan="2">
