@@ -90,11 +90,6 @@ function renderBonusRuleCard($rule, $type, $APPLICATION) {
             : 'LEGACY_LOYALTY_VIEW_SPEND';
     $prefix = Loc::getMessage($prefixKey);
 
-    $scopeKey = ($rule['APPLY_TYPE'] ?? '') === 'product'
-            ? 'LEGACY_LOYALTY_VIEW_SCOPE_PRODUCT'
-            : 'LEGACY_LOYALTY_VIEW_SCOPE_ORDER';
-    $scope = Loc::getMessage($scopeKey);
-
     $amountTypeKey = ($rule['AMOUNT_TYPE'] ?? '') === 'percent'
             ? 'LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_PERCENT'
             : 'LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_FIXED';
@@ -111,7 +106,6 @@ function renderBonusRuleCard($rule, $type, $APPLICATION) {
         <div>
             <span title="<?= $statusTitle ?>"><?= $statusEmoji ?></span>
             <span class="leglol-rule-left"><?= Loc::getMessage("LEGACY_LOYALTY_VIEW_PRIORITY") ?><b><?= (int)$rule['SORT'] ?></b></span>
-            <span class="leglol-rule-left"><?= Loc::getMessage("LEGACY_LOYALTY_VIEW_SCOPE") ?><b><?= $scope ?></b></span>
             <span class="leglol-rule-left leglol-amount-in-header">
                 <?= $prefix ?>: <b><?= $amountDisplay ?></b>
             </span>

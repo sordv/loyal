@@ -2,13 +2,15 @@
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Application;
-use Bitrix\Main\Web\Json;
 use Legacy\Loyalty\RuleBuilder\BonusRuleTable;
+use Legacy\Loyalty\Conditions as LoyaltyConditions;
+use Legacy\Loyalty\Conditions\Order as OrderConditions;
+use Legacy\Loyalty\Conditions\Product as ProductConditions;
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 Loc::loadMessages($_SERVER["DOCUMENT_ROOT"]."/local/modules/legacy.loyalty/admin/bonus_rule_edit.php");
 
-if (!Loader::includeModule('legacy.loyalty') || !Loader::includeModule('sale')) {
+if (!Loader::includeModule('legacy.loyalty')) {
     die(Loc::getMessage("LEGACY_LOYALTY_MODULE_NOT_INSTALLED"));
 }
 
@@ -21,10 +23,10 @@ if (empty($arRule)) {
     $arRule['ACTIVE'] = 'Y';
     $arRule['SORT'] = 100;
     $arRule['NAME'] = '';
-    $arRule['APPLY_TYPE'] = 'product';
     $arRule['AMOUNT_TYPE'] = 'percent';
     $arRule['AMOUNT'] = 0;
-    $arRule['CONDITIONS'] = [];
+    $arRule['CONDITIONS_ORDER'] = [];
+    $arRule['CONDITIONS_PRODUCT'] = [];
 }
 
 $message = null;
@@ -39,77 +41,63 @@ if ($request->get('cond_error') === 1) {
 }
 
 if ($request->isPost() && check_bitrix_sessid()) {
-    // устойчивый парсинг
-    $conditionsToSave = [];
-    $parseError = null;
-    $obCondParse = new CSaleCondTree();
-    $boolCondParse = $obCondParse->Init(
-        BT_COND_MODE_PARSE,
-        BT_COND_BUILD_SALE,
-        [
-            'INIT_CONTROLS' => [
-                'SITE_ID' => $request->getPost('LID') ?: SITE_ID,
-                'CURRENCY' => 'RUB'
-            ]
-        ]
-    );
+    $parseErrorOrder = null;
+    $parseErrorProduct = null;
 
-    if ($boolCondParse) {
-        $parsedConditions = $obCondParse->Parse();
+    $rawOrder = $request->getPost('ruleOrderCond');
+    $rawProduct = $request->getPost('ruleProductCond');
 
-        if (is_array($parsedConditions)) {
-            $conditionsToSave = $parsedConditions;
-        } else {
-            $parseError = Loc::getMessage("LEGACY_LOYALTY_CONDITIONS_PARSE_ERROR");
-            $conditionsToSave = $arRule['CONDITIONS'] ?? [];
-        }
-    } else {
-        $parseError = Loc::getMessage("LEGACY_LOYALTY_CONDITIONS_INIT_ERROR");
-        $conditionsToSave = $arRule['CONDITIONS'] ?? [];
-    }
+    $conditionsToSaveOrder = is_array($rawOrder)
+        ? LoyaltyConditions::saveConditions($rawOrder)
+        : ($arRule['CONDITIONS_ORDER'] ?? []);
+    $conditionsToSaveProduct = is_array($rawProduct)
+        ? LoyaltyConditions::saveConditions($rawProduct)
+        : ($arRule['CONDITIONS_PRODUCT'] ?? []);
 
     $arFields = [
         "ACTIVE" => $request->getPost("ACTIVE") === "Y" ? "Y" : "N",
         "SORT" => (int)$request->getPost("SORT"),
         "TYPE" => $request->getPost("TYPE"),
         "NAME" => trim($request->getPost("NAME")),
-        "APPLY_TYPE" => $request->getPost("APPLY_TYPE"),
         "AMOUNT_TYPE" => $request->getPost("AMOUNT_TYPE"),
         "AMOUNT" => (int)$request->getPost("AMOUNT"),
-        "CONDITIONS" => $conditionsToSave,
+        "CONDITIONS_ORDER" => $conditionsToSaveOrder,
+        "CONDITIONS_PRODUCT" => $conditionsToSaveProduct,
     ];
 
     // Валидация обязательных полей
-    if (empty($arFields['NAME'])) {
-        $message = [
-            "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_RULE_NAME_REQUIRED"),
-            "TYPE" => "ERROR"
-        ];
-    } else {
-        $res = $ID > 0
-            ? BonusRuleTable::update($ID, $arFields)
-            : BonusRuleTable::add($arFields);
+    $nameIsEmpty = empty($arFields["NAME"]);
+    if ($nameIsEmpty && $ID > 0) {
+        $arFields["NAME"] = (string)$ID;
+    }
 
-        if ($res->isSuccess() && !$ID) {
+    $res = $ID > 0
+        ? BonusRuleTable::update($ID, $arFields)
+        : BonusRuleTable::add($arFields);
+
+    if ($res->isSuccess()) {
+        if ($nameIsEmpty && !$ID) {
+            $newId = $res->getId();
+            BonusRuleTable::update($newId, ['NAME' => (string)$newId]);
+            $ID = $newId;
+        } elseif (!$ID) {
             $ID = $res->getId();
         }
 
-        if ($res->isSuccess()) {
-            $redirectParams = "&lang=" . LANG;
-            if ($parseError) {
-                $redirectParams .= "&cond_error=1";
-            }
-
-            LocalRedirect($request->getPost("apply")
-                ? "bonus_rule_edit.php?ID=" . $ID . $redirectParams
-                : "program_bonus.php?lang=" . LANG . ($parseError ? "&cond_error=1" : "")
-            );
-        } else {
-            $message = [
-                "MESSAGE" => implode("<br>", $res->getErrorMessages()),
-                "TYPE" => "ERROR"
-            ];
+        $redirectParams = "&lang=" . LANG;
+        if ($parseErrorOrder || $parseErrorProduct) {
+            $redirectParams .= "&cond_error=1";
         }
+
+        LocalRedirect($request->getPost("apply")
+            ? "bonus_rule_edit.php?ID=" . $ID . $redirectParams
+            : "program_bonus.php?lang=" . LANG . ($parseErrorOrder || $parseErrorProduct ? "&cond_error=1" : "")
+        );
+    } else {
+        $message = [
+            "MESSAGE" => implode("<br>", $res->getErrorMessages()),
+            "TYPE" => "ERROR"
+        ];
     }
 }
 
@@ -123,26 +111,16 @@ $aTabs = [
 ];
 $tabControl = new CAdminTabControl("tabControl", $aTabs);
 
-if (!is_array($arRule['CONDITIONS'])) {
-    if (CheckSerializedData($arRule['CONDITIONS'])) {
-        $arRule['CONDITIONS'] = unserialize($arRule['CONDITIONS'], ['allowed_classes' => false]);
-    } else {
-        $arRule['CONDITIONS'] = [];
+foreach (['CONDITIONS_ORDER', 'CONDITIONS_PRODUCT'] as $field) {
+    if (!is_array($arRule[$field])) {
+        if (CheckSerializedData($arRule[$field])) {
+            $arRule[$field] = unserialize($arRule[$field], ['allowed_classes' => false]);
+        } else {
+            $arRule[$field] = [];
+        }
     }
 }
 
-if (!defined('BT_COND_MODE_DEFAULT')) define('BT_COND_MODE_DEFAULT', 0);
-if (!defined('BT_COND_BUILD_SALE')) define('BT_COND_BUILD_SALE', 'sale');
-
-$arCondParams = [
-    'FORM_NAME' => 'form_edit',
-    'CONT_ID' => 'condition-tree',
-    'JS_NAME' => 'JSLoyaltyCond',
-    'INIT_CONTROLS' => ['SITE_ID' => SITE_ID, 'CURRENCY' => 'RUB'],
-];
-
-$obCond = new CSaleCondTree();
-$boolCond = $obCond->Init(BT_COND_MODE_DEFAULT, BT_COND_BUILD_SALE, $arCondParams);
 ?>
 
 <form method="POST" action="<?= $APPLICATION->GetCurPageParam() ?>" name="form_edit" id="form_edit">
@@ -193,21 +171,6 @@ $boolCond = $obCond->Init(BT_COND_MODE_DEFAULT, BT_COND_BUILD_SALE, $arCondParam
         </td>
     </tr>
 
-    <!-- Тип: товар/заказ -->
-    <tr>
-        <td><?= Loc::getMessage("LEGACY_LOYALTY_RULE_SCOPE") ?></td>
-        <td>
-            <select name="APPLY_TYPE">
-                <option value="product" <?= ($arRule['APPLY_TYPE'] === 'product' ? 'selected' : '') ?>>
-                    <?= Loc::getMessage("LEGACY_LOYALTY_RULE_SCOPE_PRODUCT") ?>
-                </option>
-                <option value="order" <?= ($arRule['APPLY_TYPE'] === 'order' ? 'selected' : '') ?>>
-                    <?= Loc::getMessage("LEGACY_LOYALTY_RULE_SCOPE_ORDER") ?>
-                </option>
-            </select>
-        </td>
-    </tr>
-
     <!-- Тип: процент/фикс -->
     <tr>
         <td><?= Loc::getMessage("LEGACY_LOYALTY_RULE_AMOUNT_TYPE") ?></td>
@@ -230,24 +193,54 @@ $boolCond = $obCond->Init(BT_COND_MODE_DEFAULT, BT_COND_BUILD_SALE, $arCondParam
         </td>
     </tr>
 
-    <tr class="heading"><td colspan="2"><?= Loc::getMessage("LEGACY_LOYALTY_CONDITIONS") ?></td></tr>
-    <tr><td colspan="2">
-            <?php if ($boolCond): ?>
-                <!-- конструктор условий -->
-                <div id="condition-tree" class="leglol-condition-builder">
-                    <?php
-                    ob_start();
-                    $obCond->Show($arRule['CONDITIONS']);
-                    $jsOutput = ob_get_clean();
-                    $jsOutput = preg_replace("/('parentContainer'\s*:\s*)''/", "$1'condition-tree'", $jsOutput);
-                    $jsOutput = preg_replace("/('form'\s*:\s*)''/", "$1'form_edit'", $jsOutput);
-                    echo $jsOutput;
-                    ?>
-                </div>
-            <?php else: ?>
-                <div>❌ <?=Loc::getMessage("LEGACY_LOYALTY_CONDITIONS_INIT_ERROR")?> </div>
-            <?php endif; ?>
-        </td></tr>
+    <!-- Конструктор условий - Заказ -->
+    <tr class="heading">
+        <td colspan="2"><?= Loc::getMessage("LEGACY_LOYALTY_CONDITIONS_ORDER") ?></td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <?php
+            CJSCore::Init(['core_condtree', 'core_userselector', 'core_date']);
+            $orderTree = !empty($arRule['CONDITIONS_ORDER'])
+                ? \Bitrix\Main\Web\Json::encode($arRule['CONDITIONS_ORDER'])
+                : OrderConditions::baseConditions('json');
+            ?>
+            <div id="OrderConditions" class="leglol-condition-builder"></div>
+            <script>
+                BX.ready(function () {
+                    new BX.TreeConditions(
+                        <?=OrderConditions::mainParams('json')?>,
+                        <?=$orderTree?>,
+                        <?=OrderConditions::controls('json')?>
+                    );
+                });
+            </script>
+        </td>
+    </tr>
+
+    <!-- Конструктор условий - Товары -->
+    <tr class="heading">
+        <td colspan="2"><?= Loc::getMessage("LEGACY_LOYALTY_CONDITIONS_PRODUCT") ?></td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <?php
+            $productTree = !empty($arRule['CONDITIONS_PRODUCT'])
+                ? \Bitrix\Main\Web\Json::encode($arRule['CONDITIONS_PRODUCT'])
+                : ProductConditions::baseConditions('json');
+            ?>
+            <div id="ProductConditions" class="leglol-condition-builder"></div>
+            <script>
+                BX.ready(function () {
+                    new BX.TreeConditions(
+                        <?=ProductConditions::mainParams('json')?>,
+                        <?=$productTree?>,
+                        <?=ProductConditions::controls('json')?>
+                    );
+                });
+            </script>
+        </td>
+    </tr>
 
     <?php
     $tabControl->Buttons([
@@ -271,6 +264,12 @@ $boolCond = $obCond->Init(BT_COND_MODE_DEFAULT, BT_COND_BUILD_SALE, $arCondParam
         position: relative;
         z-index: 1;
         min-height: 100px;
+    }
+
+    .leglol-conditions-separator {
+        margin: 20px 0;
+        border-top: 1px dashed #ccc;
+        padding-top: 20px;
     }
 </style>
 

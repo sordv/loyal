@@ -14,14 +14,12 @@ $MESS["LEGACY_LOYALTY_RULE_NAME"] = "Название правила";
 $MESS["LEGACY_LOYALTY_RULE_TYPE"] = "Тип правила";
 $MESS["LEGACY_LOYALTY_RULE_TYPE_ADD"] = "начисление";
 $MESS["LEGACY_LOYALTY_RULE_TYPE_SPEND"] = "списание";
-$MESS["LEGACY_LOYALTY_RULE_SCOPE"] = "Область применения";
-$MESS["LEGACY_LOYALTY_RULE_SCOPE_PRODUCT"] = "товар";
-$MESS["LEGACY_LOYALTY_RULE_SCOPE_ORDER"] = "заказ";
 $MESS["LEGACY_LOYALTY_RULE_AMOUNT_TYPE"] = "Тип значения";
 $MESS["LEGACY_LOYALTY_RULE_AMOUNT_TYPE_PERCENT"] = "% от стоимости";
 $MESS["LEGACY_LOYALTY_RULE_AMOUNT_TYPE_FIXED"] = "фиксированное значение";
 
 $MESS["LEGACY_LOYALTY_AMOUNT"] = "Значение";
-$MESS["LEGACY_LOYALTY_CONDITIONS"] = "Условия применения";
+$MESS["LEGACY_LOYALTY_CONDITIONS_ORDER"] = "Условия применения (заказ)";
+$MESS["LEGACY_LOYALTY_CONDITIONS_PRODUCT"] = "Условия применения (товары)";
 
 $MESS["LEGACY_LOYALTY_SAVED"] = "Изменения сохранены";//

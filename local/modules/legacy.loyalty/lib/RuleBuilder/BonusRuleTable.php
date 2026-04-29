@@ -16,12 +16,12 @@ class BonusRuleTable extends DataManager {
             new IntegerField('ID', ['primary' => true, 'autocomplete' => true]),
             new IntegerField('SORT', ['default' => 100]),
             new StringField('ACTIVE', ['default' => 'Y', 'values' => ['Y', 'N']]),
-            new StringField('NAME', ['required' => true, 'size' => 255]),
+            new StringField('NAME', ['size' => 255]),
             new StringField('TYPE', ['values' => ['add', 'spend']]),
-            new StringField('APPLY_TYPE', ['values' => ['product', 'order']]),
             new StringField('AMOUNT_TYPE', ['values' => ['percent', 'fixed']]),
             new IntegerField('AMOUNT', ['default' => 0]),
-            new TextField('CONDITIONS', ['serialized' => true]),
+            new TextField('CONDITIONS_ORDER', ['serialized' => true]),
+            new TextField('CONDITIONS_PRODUCT', ['serialized' => true]),
         ];
     }
 }

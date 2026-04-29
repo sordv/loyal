@@ -17,7 +17,7 @@ class LevelRuleTable extends DataManager {
             new IntegerField('ID', ['primary' => true, 'autocomplete' => true]),
             new IntegerField('SORT', ['default' => 100]),
             new StringField('ACTIVE', ['default' => 'Y', 'values' => ['Y', 'N']]),
-            new StringField('NAME', ['required' => true, 'size' => 255]),
+            new StringField('NAME', ['size' => 255]),
             new IntegerField('PERIOD', ['default' => null]),
             new TextField('CONDITIONS', ['serialized' => true]),
             new TextField('PRIVILEGES', ['serialized' => true]),

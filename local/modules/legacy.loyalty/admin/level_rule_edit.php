@@ -3,11 +3,13 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Application;
 use Legacy\Loyalty\RuleBuilder\LevelRuleTable;
+use Legacy\Loyalty\Conditions as LoyaltyConditions;
+use Legacy\Loyalty\Conditions\User as UserConditions;
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 Loc::loadMessages($_SERVER["DOCUMENT_ROOT"]."/local/modules/legacy.loyalty/admin/level_rule_edit.php");
 
-if (!Loader::includeModule('legacy.loyalty') || !Loader::includeModule('sale')) {
+if (!Loader::includeModule('legacy.loyalty')) {
     die(Loc::getMessage("LEGACY_LOYALTY_MODULE_NOT_INSTALLED"));
 }
 
@@ -37,34 +39,12 @@ if ($condError === '1' || (int)$condError === 1) {
 }
 
 if ($request->isPost() && check_bitrix_sessid()) {
-    // устойчивый парсинг
     $conditionsToSave = [];
     $parseError = null;
-    $obCondParse = new CSaleCondTree();
-    $boolCondParse = $obCondParse->Init(
-        BT_COND_MODE_PARSE,
-        BT_COND_BUILD_SALE,
-        [
-            'INIT_CONTROLS' => [
-                'SITE_ID' => $request->getPost('LID') ?: SITE_ID,
-                'FILTER' => ['USER'],
-            ]
-        ]
-    );
-
-    if ($boolCondParse) {
-        $parsedConditions = $obCondParse->Parse();
-
-        if (is_array($parsedConditions)) {
-            $conditionsToSave = $parsedConditions;
-        } else {
-            $parseError = Loc::getMessage("LEGACY_LOYALTY_LEVEL_COND_PARSE_ERROR");
-            $conditionsToSave = $arRule['CONDITIONS'] ?? [];
-        }
-    } else {
-        $parseError = Loc::getMessage("LEGACY_LOYALTY_LEVEL_COND_INIT_ERROR");
-        $conditionsToSave = $arRule['CONDITIONS'] ?? [];
-    }
+    $raw = $request->getPost('levelRuleCond');
+    $conditionsToSave = is_array($raw)
+        ? LoyaltyConditions::saveConditions($raw)
+        : ($arRule['CONDITIONS'] ?? []);
 
     $arFields = [
         "ACTIVE" => $request->getPost("ACTIVE") === "Y" ? "Y" : "N",
@@ -76,37 +56,39 @@ if ($request->isPost() && check_bitrix_sessid()) {
     ];
 
     // Валидация обязательных полей
-    if (empty($arFields['NAME'])) {
-        $message = [
-            "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_LEVEL_NAME_REQUIRED"),
-            "TYPE" => "ERROR"
-        ];
-    } else {
-        $res = $ID > 0
-            ? LevelRuleTable::update($ID, $arFields)
-            : LevelRuleTable::add($arFields);
+    $nameIsEmpty = empty($arFields["NAME"]);
+    if ($nameIsEmpty && $ID > 0) {
+        $arFields["NAME"] = (string)$ID;
+    }
 
-        if ($res->isSuccess() && !$ID) {
+    $res = $ID > 0
+        ? LevelRuleTable::update($ID, $arFields)
+        : LevelRuleTable::add($arFields);
+
+    if ($res->isSuccess()) {
+        if ($nameIsEmpty && !$ID) {
+            $newId = $res->getId();
+            LevelRuleTable::update($newId, ['NAME' => (string)$newId]);
+            $ID = $newId;
+        } elseif (!$ID) {
             $ID = $res->getId();
         }
 
-        if ($res->isSuccess()) {
-            $redirectParams = "?lang=" . LANG;
-            if ($parseError) {
-                $redirectParams .= "&cond_error=1";
-            }
+        $redirectParams = "?lang=" . LANG;
+        if ($parseError) {
+            $redirectParams .= "&cond_error=1";
+        }
 
-            $baseUrl = $request->getPost("apply")
-                ? "level_rule_edit.php?ID=" . $ID
-                : "program_level.php";
+        $baseUrl = $request->getPost("apply")
+            ? "level_rule_edit.php?ID=" . $ID
+            : "program_level.php";
 
-            LocalRedirect($baseUrl . $redirectParams);
-        } else {
-            $message = [
+        LocalRedirect($baseUrl . $redirectParams);
+    } else {
+        $message = [
                 "MESSAGE" => implode("<br>", $res->getErrorMessages()),
                 "TYPE" => "ERROR"
-            ];
-        }
+        ];
     }
 }
 
@@ -131,16 +113,6 @@ if (!is_array($arRule['CONDITIONS'])) {
 
 if (!defined('BT_COND_MODE_DEFAULT')) define('BT_COND_MODE_DEFAULT', 0);
 if (!defined('BT_COND_BUILD_USER')) define('BT_COND_BUILD_USER', 'user');
-
-$arCondParams = [
-    'FORM_NAME' => 'form_edit',
-    'CONT_ID' => 'condition-tree',
-    'JS_NAME' => 'JSLoyaltyLevelCond',
-    'INIT_CONTROLS' => ['SITE_ID' => SITE_ID, 'FILTER' => ['USER']],
-];
-
-$obCond = new CSaleCondTree();
-$boolCond = $obCond->Init(BT_COND_MODE_DEFAULT, BT_COND_BUILD_USER, $arCondParams);
 ?>
 
 <form method="POST" action="<?= $APPLICATION->GetCurPageParam() ?>" name="form_edit" id="form_edit">
@@ -193,22 +165,22 @@ $boolCond = $obCond->Init(BT_COND_MODE_DEFAULT, BT_COND_BUILD_USER, $arCondParam
     <!-- Конструктор условий -->
     <tr>
         <td colspan="2">
-            <?php if ($boolCond): ?>
-                <div id="condition-tree" class="leglol-condition-builder">
-                    <?php
-                    ob_start();
-                    $obCond->Show($arRule['CONDITIONS']);
-                    $jsOutput = ob_get_clean();
-                    $jsOutput = preg_replace("/('parentContainer'\s*:\s*)''/", "$1'condition-tree'", $jsOutput);
-                    $jsOutput = preg_replace("/('form'\s*:\s*)''/", "$1'form_edit'", $jsOutput);
-                    echo $jsOutput;
-                    ?>
-                </div>
-            <?php else: ?>
-                <div style="color:#c00;background:#ffebee;padding:12px;border-radius:4px;">
-                    ❌ <?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_COND_INIT_ERROR") ?>
-                </div>
-            <?php endif; ?>
+            <?php
+            CJSCore::Init(['core_condtree', 'core_userselector', 'core_date']);
+            $userTree = !empty($arRule['CONDITIONS'])
+                ? \Bitrix\Main\Web\Json::encode($arRule['CONDITIONS'])
+                : UserConditions::baseConditions('json');
+            ?>
+            <div id="UserConditions" class="leglol-condition-builder"></div>
+            <script>
+                BX.ready(function () {
+                    new BX.TreeConditions(
+                        <?=UserConditions::mainParams('json')?>,
+                        <?=$userTree?>,
+                        <?=UserConditions::controls('json')?>
+                    );
+                });
+            </script>
         </td>
     </tr>
 
