@@ -17,6 +17,13 @@ return [
         [
             "text" => Loc::getMessage("LEGACY_LOYALTY_MENU_PROGRAM"),
             "url" => "menu_program.php",
+            "more_url" => [
+                "program_bonus.php",
+                "program_level.php",
+                "program_event.php",
+                "bonus_rule_edit.php",
+                "level_rule_edit.php",
+            ],
         ],
         [
             "text" => Loc::getMessage("LEGACY_LOYALTY_MENU_USER"),

@@ -3,7 +3,6 @@ namespace Legacy\Loyalty\Conditions;
 
 use Bitrix\Main\Loader;
 use Bitrix\Main\Web\Json;
-use Legacy\Loyalty\Service\LevelService;
 
 class Order {
     public static function mainParams(string $mode = ''): array|string {
@@ -199,14 +198,14 @@ class Order {
                         ],
                     ],
                 ],
-                // КОЛ-ВО ТОВАРОВ
+                // КОЛИЧЕСТВО ТОВАРОВ
                 [
                     'controlId' => 'itemCount',
                     'group' => false,
-                    'label' => 'Кол-во товаров',
+                    'label' => 'Количество товаров',
                     'showIn' => ['CondGroup'],
                     'control' => [
-                        ['id' => 'prefix', 'type' => 'prefix', 'text' => 'Кол-во товаров'],
+                        ['id' => 'prefix', 'type' => 'prefix', 'text' => 'Количество товаров'],
                         [
                             'id' => 'logic',
                             'name' => 'logic',
@@ -348,7 +347,6 @@ class Order {
                         ],
                         [
                             'type' => 'select',
-                            'multiple' => 'Y',
                             'values' => $levels,
                             'id' => 'value',
                             'name' => 'value',
@@ -494,10 +492,30 @@ class Order {
     }
 
     private static function getUserLevels(): array {
-        $out = [];
-        foreach (LevelService::getAllLevels() as $lvl) {
-            $out[(string)$lvl['ID']] = $lvl['NAME'] !== '' ? $lvl['NAME'] : ('#'.$lvl['ID']);
+        $out = ['level_0' => 'Без уровня [0]'];
+
+        try {
+            $connection = \Bitrix\Main\Application::getConnection();
+            if (!$connection->isTableExists('b_legacy_loyalty_level_rule')) {
+                return $out;
+            }
+
+            $res = $connection->query("
+                SELECT ID, NAME
+                FROM b_legacy_loyalty_level_rule
+                WHERE ACTIVE = 'Y'
+                ORDER BY SORT ASC, ID ASC
+            ");
+
+            while ($level = $res->fetch()) {
+                $id = (int)$level['ID'];
+                $name = trim((string)($level['NAME'] ?? ''));
+                $out['level_' . $id] = htmlspecialcharsbx($name !== '' ? $name : 'Уровень #' . $id) . ' [' . $id . ']';
+            }
+        } catch (\Throwable $exception) {
+            return $out;
         }
+
         return $out;
     }
 

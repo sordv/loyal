@@ -2,7 +2,6 @@
 namespace Legacy\Loyalty\Conditions;
 
 use Bitrix\Main\Web\Json;
-use Legacy\Loyalty\Service\LevelService;
 
 class User
 {
@@ -41,9 +40,6 @@ class User
 
     public static function controls(string $mode = ''): array|string
     {
-        $userGroups = self::getUserGroups();
-        $levels = self::getUserLevels();
-
         $params = [];
 
         $params[] = [
@@ -134,14 +130,14 @@ class User
                         ],
                     ],
                 ],
-                // КОЛ-ВО ЗАКАЗОВ
+                // КОЛИЧЕСТВО ЗАКАЗОВ
                 [
                     'controlId' => 'ordersCount',
                     'group' => false,
-                    'label' => 'Кол-во заказов',
+                    'label' => 'Количество заказов',
                     'showIn' => ['CondGroup'],
                     'control' => [
-                        ['id' => 'prefix', 'type' => 'prefix', 'text' => 'Кол-во заказов'],
+                        ['id' => 'prefix', 'type' => 'prefix', 'text' => 'Количество заказов'],
                         [
                             'id' => 'logic',
                             'name' => 'logic',
@@ -164,6 +160,88 @@ class User
                             'show_value' => 'Y',
                             'defaultValue' => '0',
                         ],
+                    ],
+                ],
+                // СУММА ЗАКАЗОВ ЗА ПЕРИОД
+                [
+                    'controlId' => 'ordersSumPeriod',
+                    'group' => false,
+                    'label' => 'Сумма заказов за период',
+                    'showIn' => ['CondGroup'],
+                    'control' => [
+                        ['id' => 'prefix', 'type' => 'prefix', 'text' => 'Сумма заказов'],
+                        [
+                            'id' => 'logic',
+                            'name' => 'logic',
+                            'type' => 'select',
+                            'values' => [
+                                'Equal' => 'равно',
+                                'Not' => 'не равно',
+                                'Greater' => 'больше',
+                                'Less' => 'меньше',
+                                'GreaterEqual' => 'больше или равно',
+                                'LessEqual' => 'меньше или равно',
+                            ],
+                            'defaultText' => 'больше или равно',
+                            'defaultValue' => 'GreaterEqual',
+                        ],
+                        [
+                            'type' => 'input',
+                            'id' => 'value',
+                            'name' => 'value',
+                            'show_value' => 'Y',
+                            'defaultValue' => '0',
+                        ],
+                        ['id' => 'period_prefix', 'type' => 'prefix', 'text' => 'за последние'],
+                        [
+                            'type' => 'input',
+                            'id' => 'period',
+                            'name' => 'period',
+                            'show_value' => 'Y',
+                            'defaultValue' => '30',
+                        ],
+                        ['id' => 'period_suffix', 'type' => 'prefix', 'text' => 'дней'],
+                    ],
+                ],
+                // КОЛИЧЕСТВО ЗАКАЗОВ ЗА ПЕРИОД
+                [
+                    'controlId' => 'ordersCountPeriod',
+                    'group' => false,
+                    'label' => 'Количество заказов за период',
+                    'showIn' => ['CondGroup'],
+                    'control' => [
+                        ['id' => 'prefix', 'type' => 'prefix', 'text' => 'Количество заказов'],
+                        [
+                            'id' => 'logic',
+                            'name' => 'logic',
+                            'type' => 'select',
+                            'values' => [
+                                'Equal' => 'равно',
+                                'Not' => 'не равно',
+                                'Greater' => 'больше',
+                                'Less' => 'меньше',
+                                'GreaterEqual' => 'больше или равно',
+                                'LessEqual' => 'меньше или равно',
+                            ],
+                            'defaultText' => 'больше или равно',
+                            'defaultValue' => 'GreaterEqual',
+                        ],
+                        [
+                            'type' => 'input',
+                            'id' => 'value',
+                            'name' => 'value',
+                            'show_value' => 'Y',
+                            'defaultValue' => '0',
+                        ],
+                        ['id' => 'period_prefix', 'type' => 'prefix', 'text' => 'за последние'],
+                        [
+                            'type' => 'input',
+                            'id' => 'period',
+                            'name' => 'period',
+                            'show_value' => 'Y',
+                            'defaultValue' => '30',
+                        ],
+                        ['id' => 'period_suffix', 'type' => 'prefix', 'text' => 'дней'],
                     ],
                 ],
                 // ВОЗРАСТ АККАУНТА
@@ -238,8 +316,7 @@ class User
         return $mode === 'json' ? Json::encode($params) : $params;
     }
 
-    private static function getUserGroups(): array
-    {
+    private static function getUserGroups(): array {
         $out = [];
         $db = \CGroup::GetList('c_sort', 'asc', ['ACTIVE' => 'Y']);
         while ($g = $db->Fetch()) {
@@ -248,12 +325,31 @@ class User
         return $out;
     }
 
-    private static function getUserLevels(): array
-    {
-        $out = [];
-        foreach (LevelService::getAllLevels() as $lvl) {
-            $out[(string)$lvl['ID']] = $lvl['NAME'] !== '' ? $lvl['NAME'] : ('#'.$lvl['ID']);
+    private static function getUserLevels(): array {
+        $out = ['0' => 'Без уровня [0]'];
+
+        try {
+            $connection = \Bitrix\Main\Application::getConnection();
+            if (!$connection->isTableExists('b_legacy_loyalty_level_rule')) {
+                return $out;
+            }
+
+            $res = $connection->query("
+                SELECT ID, NAME
+                FROM b_legacy_loyalty_level_rule
+                WHERE ACTIVE = 'Y'
+                ORDER BY SORT ASC, ID ASC
+            ");
+
+            while ($level = $res->fetch()) {
+                $id = (string)(int)$level['ID'];
+                $name = trim((string)($level['NAME'] ?? ''));
+                $out[$id] = htmlspecialcharsbx($name !== '' ? $name : 'Уровень #' . $id) . ' [' . $id . ']';
+            }
+        } catch (\Throwable $exception) {
+            return $out;
         }
+
         return $out;
     }
 }

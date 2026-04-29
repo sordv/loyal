@@ -52,11 +52,11 @@ if (class_exists('Legacy\Loyalty\RuleBuilder\BonusRuleTable')) {
     try {
         $addRules = \Legacy\Loyalty\RuleBuilder\BonusRuleTable::getList([
             'filter' => ['TYPE' => 'add'],
-            'order' => ['SORT' => 'DESC']
+            'order' => ['SORT' => 'ASC']
         ])->fetchAll();
         $spendRules = \Legacy\Loyalty\RuleBuilder\BonusRuleTable::getList([
             'filter' => ['TYPE' => 'spend'],
-            'order' => ['SORT' => 'DESC']
+            'order' => ['SORT' => 'ASC']
         ])->fetchAll();
     } catch (\Exception $e) {
         $message = ["TYPE" => "ERROR", "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_RULES_LOAD_ERROR") . $e->getMessage()];

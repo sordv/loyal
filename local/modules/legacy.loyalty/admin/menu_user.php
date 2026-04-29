@@ -195,7 +195,8 @@ function openLevelPopup(userId, currentLevelId) {
     var options = levels.map(function(lvl)
     {
         var selected = (lvl.ID == currentLevelId) ? ' selected' : '';
-        return '<option value="' + lvl.ID + '"' + selected + '>' + lvl.NAME + '</option>';
+        var label = (lvl.ID === 0) ? lvl.NAME : lvl.NAME + ' [' + lvl.ID + ']';
+        return '<option value="' + lvl.ID + '"' + selected + '>' + label + '</option>';
     }).join('');
 
     BX.UI.Dialogs.MessageBox.show({

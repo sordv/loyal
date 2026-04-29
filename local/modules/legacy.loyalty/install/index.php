@@ -31,6 +31,13 @@ Class legacy_loyalty extends CModule {
             true
         );
 
+        CopyDirFiles(
+            __DIR__ . "/components",
+            $_SERVER["DOCUMENT_ROOT"] . "/local/components",
+            true,
+            true
+        );
+
         return true;
     }
 
@@ -47,11 +54,27 @@ Class legacy_loyalty extends CModule {
     }
 
     function InstallEvents() {
-        /*
-        require_once __DIR__ . '/../lib/Service/BonusService.php';
-        require_once __DIR__ . '/../lib/EventHandler/BonusHandler.php';
-        \Legacy\Loyalty\EventHandler\BonusHandler::registerAgents();
-        */
+        RegisterModuleDependences(
+            'sale',
+            'OnSaleOrderBeforeSaved',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
+            'onSaleOrderBeforeSaved'
+        );
+        RegisterModuleDependences(
+            'sale',
+            'OnSaleComponentOrderCreated',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
+            'onSaleComponentOrderCreated'
+        );
+        RegisterModuleDependences(
+            'sale',
+            'OnSaleComponentOrderResultPrepared',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
+            'onSaleComponentOrderResultPrepared'
+        );
 
         return true;
     }
@@ -61,6 +84,8 @@ Class legacy_loyalty extends CModule {
             __DIR__ . "/../admin",
             $_SERVER["DOCUMENT_ROOT"] . "/bitrix/admin"
         );
+
+        DeleteDirFilesEx("/local/components/legacy/loyalty.cart.bonus");
 
         return true;
     }
@@ -74,11 +99,27 @@ Class legacy_loyalty extends CModule {
     }
 
     function UnInstallEvents() {
-        /*
-        require_once __DIR__ . '/../lib/Service/BonusService.php';
-        require_once __DIR__ . '/../lib/EventHandler/BonusHandler.php';
-        \Legacy\Loyalty\EventHandler\BonusHandler::unregisterAgents();
-        */
+        UnRegisterModuleDependences(
+            'sale',
+            'OnSaleOrderBeforeSaved',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
+            'onSaleOrderBeforeSaved'
+        );
+        UnRegisterModuleDependences(
+            'sale',
+            'OnSaleComponentOrderCreated',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
+            'onSaleComponentOrderCreated'
+        );
+        UnRegisterModuleDependences(
+            'sale',
+            'OnSaleComponentOrderResultPrepared',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
+            'onSaleComponentOrderResultPrepared'
+        );
 
         return true;
     }

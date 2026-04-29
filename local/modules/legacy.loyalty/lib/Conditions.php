@@ -80,11 +80,11 @@ class Conditions {
                         }
                     }
 
-                    if (in_array($block['controlId'], ['orderSum', 'cartSum', 'productPrice', 'ordersSum'], true)) {
+                    if (in_array($block['controlId'], ['orderSum', 'cartSum', 'productPrice', 'ordersSum', 'ordersSumPeriod'], true)) {
                         $v = (string)(float)str_replace(',', '.', (string)$v);
                     }
 
-                    if (in_array($block['controlId'], ['registrationAge', 'ordersCount', 'everyNthOrder', 'onlyNthOrder', 'itemCount'], true)) {
+                    if (in_array($block['controlId'], ['registrationAge', 'ordersCount', 'ordersCountPeriod', 'everyNthOrder', 'onlyNthOrder', 'itemCount'], true)) {
                         $v = (string)(int)$v;
                     }
 
@@ -94,6 +94,10 @@ class Conditions {
                             $v = date('Y-m-d H:i:s', $timestamp);
                         }
                     }
+                }
+
+                if ($k === 'period' && in_array($block['controlId'], ['ordersSumPeriod', 'ordersCountPeriod'], true)) {
+                    $v = (string)max(1, (int)$v);
                 }
 
                 $block['values'][$k] = $v;

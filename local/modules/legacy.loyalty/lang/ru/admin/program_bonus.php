@@ -22,7 +22,7 @@ $MESS["LEGACY_LOYALTY_VIEW_PRIORITY"] = "Приоритет: ";
 $MESS["LEGACY_LOYALTY_VIEW_ADD"] = "Начислять";
 $MESS["LEGACY_LOYALTY_VIEW_SPEND"] = "Списывать до";
 $MESS["LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_PERCENT"] = "% бонусами";
-$MESS["LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_FIXED"] = "бонусов";
+$MESS["LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_FIXED"] = " бонусов";
 
 // Общие для программы настройки
 $MESS["LEGACY_LOYALTY_BONUS_NAME"] = "Название бонусов:";

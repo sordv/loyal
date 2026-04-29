@@ -3,6 +3,9 @@
 namespace Legacy\Loyalty\Service;
 
 use Bitrix\Main\Application;
+use Bitrix\Main\Loader;
+use Bitrix\Main\Type\DateTime;
+use Bitrix\Sale\Order;
 
 class LevelService {
     public static function setLevel($userId, $levelId)
@@ -120,14 +123,15 @@ class LevelService {
 
         $levelId = (int)$userLevel['LEVEL_ID'];
         $levelRule = $connection->query("
-            SELECT NAME
+            SELECT NAME, PRIVILEGES
             FROM b_legacy_loyalty_level_rule
             WHERE ID = {$levelId}
         ")->fetch();
 
         return [
             'ID' => $levelId,
-            'NAME' => $levelRule['NAME'] ?? ''
+            'NAME' => $levelRule['NAME'] ?? '',
+            'PRIVILEGES' => self::normalizePrivileges($levelRule['PRIVILEGES'] ?? [])
         ];
     }
 
@@ -150,5 +154,53 @@ class LevelService {
         }
 
         return $levels;
+    }
+
+    public static function normalizePrivileges($privileges): array {
+        if (is_string($privileges) && $privileges !== '') {
+            $unserialized = @unserialize($privileges, ['allowed_classes' => false]);
+            $privileges = is_array($unserialized) ? $unserialized : [];
+        }
+
+        if (!is_array($privileges)) {
+            $privileges = [];
+        }
+
+        return [
+            'cartDiscountPercent' => max(0, min(100, (float)($privileges['cartDiscountPercent'] ?? 0))),
+            'deliveryDiscountPercent' => max(0, min(100, (float)($privileges['deliveryDiscountPercent'] ?? 0))),
+            'addBonusMultiplier' => max(0, (float)($privileges['addBonusMultiplier'] ?? 1)),
+            'spendBonusMultiplier' => max(0, (float)($privileges['spendBonusMultiplier'] ?? 1)),
+        ];
+    }
+
+    public static function getCompletedOrdersStats(int $userId, ?int $periodDays = null): array {
+        if ($userId <= 0 || !Loader::includeModule('sale')) {
+            return ['count' => 0, 'sum' => 0.0];
+        }
+
+        $filter = [
+            '=USER_ID' => $userId,
+            '=STATUS_ID' => 'F',
+            '=CANCELED' => 'N',
+        ];
+
+        if ($periodDays !== null && $periodDays > 0) {
+            $filter['>=DATE_INSERT'] = (new DateTime())->add('-' . $periodDays . ' days');
+        }
+
+        $row = Order::getList([
+            'filter' => $filter,
+            'select' => ['CNT', 'SUM_PRICE'],
+            'runtime' => [
+                new \Bitrix\Main\Entity\ExpressionField('CNT', 'COUNT(*)'),
+                new \Bitrix\Main\Entity\ExpressionField('SUM_PRICE', 'SUM(%s)', ['PRICE']),
+            ],
+        ])->fetch();
+
+        return [
+            'count' => (int)($row['CNT'] ?? 0),
+            'sum' => (float)($row['SUM_PRICE'] ?? 0),
+        ];
     }
 }

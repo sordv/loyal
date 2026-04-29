@@ -150,11 +150,14 @@ class Product {
                             'defaultValue' => 'Equal',
                         ],
                         [
-                            'type' => 'popupWindow',
-                            'popup_url' => '/bitrix/admin/cat_section_search_dialog.php',
-                            'popup_params' => ['lang' => LANGUAGE_ID],
-                            'param_id' => 'n',
+                            'type' => 'select',
+                            'multiple' => 'Y',
+                            'size' => 8,
+                            'values' => $sections,
                             'show_value' => 'Y',
+                            'first_option' => '...',
+                            'defaultText' => '...',
+                            'defaultValue' => '',
                             'id' => 'value',
                             'name' => 'value',
                         ],
@@ -274,7 +277,7 @@ class Product {
         }
         $res = \CIBlockSection::GetList(
             ['SORT' => 'ASC'],
-            ['ACTIVE' => 'Y', 'DEPTH_LEVEL' => '1'],
+            ['ACTIVE' => 'Y'],
             false,
             ['ID', 'NAME', 'IBLOCK_ID']
         );

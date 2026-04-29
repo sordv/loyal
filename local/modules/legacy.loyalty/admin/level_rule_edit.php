@@ -28,6 +28,35 @@ if (empty($arRule)) {
 
 $message = null;
 
+if (!function_exists('normalizeLevelPrivileges')) {
+    function normalizeLevelPrivileges($raw): array
+    {
+        $raw = is_array($raw) ? $raw : [];
+
+        $percentFields = [
+            'cartDiscountPercent',
+            'deliveryDiscountPercent',
+        ];
+        $multiplierFields = [
+            'addBonusMultiplier',
+            'spendBonusMultiplier',
+        ];
+
+        $result = [];
+        foreach ($percentFields as $field) {
+            $value = (float)str_replace(',', '.', (string)($raw[$field] ?? 0));
+            $result[$field] = max(0, min(100, $value));
+        }
+
+        foreach ($multiplierFields as $field) {
+            $value = (float)str_replace(',', '.', (string)($raw[$field] ?? 1));
+            $result[$field] = max(0, $value);
+        }
+
+        return $result;
+    }
+}
+
 // ошибка парсинга если с редиректа
 $condError = $request->get('cond_error');
 if ($condError === '1' || (int)$condError === 1) {
@@ -52,7 +81,7 @@ if ($request->isPost() && check_bitrix_sessid()) {
         "NAME" => trim($request->getPost("NAME")),
         "PERIOD" => (int)$request->getPost("PERIOD"),
         "CONDITIONS" => $conditionsToSave,
-        "PRIVILEGES" => [],
+        "PRIVILEGES" => normalizeLevelPrivileges($request->getPost("PRIVILEGES")),
     ];
 
     // Валидация обязательных полей
@@ -110,6 +139,15 @@ if (!is_array($arRule['CONDITIONS'])) {
         $arRule['CONDITIONS'] = [];
     }
 }
+
+if (!is_array($arRule['PRIVILEGES'])) {
+    if (CheckSerializedData($arRule['PRIVILEGES'])) {
+        $arRule['PRIVILEGES'] = unserialize($arRule['PRIVILEGES'], ['allowed_classes' => false]);
+    } else {
+        $arRule['PRIVILEGES'] = [];
+    }
+}
+$arRule['PRIVILEGES'] = normalizeLevelPrivileges($arRule['PRIVILEGES']);
 
 if (!defined('BT_COND_MODE_DEFAULT')) define('BT_COND_MODE_DEFAULT', 0);
 if (!defined('BT_COND_BUILD_USER')) define('BT_COND_BUILD_USER', 'user');
@@ -189,13 +227,29 @@ if (!defined('BT_COND_BUILD_USER')) define('BT_COND_BUILD_USER', 'user');
         <td colspan="2"><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_PRIVILEGES") ?></td>
     </tr>
     <tr>
-        <td colspan="2">
-            <div style="color:#666;background:#f9f9f9;padding:12px;border-radius:4px;">
-                <?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_PRIVILEGES_PLACEHOLDER") ?>
-            </div>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_PRIV_CART_DISCOUNT") ?: 'Скидка на корзину %' ?></td>
+        <td>
+            <input type="number" name="PRIVILEGES[cartDiscountPercent]" value="<?= htmlspecialcharsbx($arRule['PRIVILEGES']['cartDiscountPercent']) ?>" class="leglol-numeric-input" min="0" max="100" step="0.01"> %
         </td>
     </tr>
-
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_PRIV_DELIVERY_DISCOUNT") ?: 'Скидка на доставку %' ?></td>
+        <td>
+            <input type="number" name="PRIVILEGES[deliveryDiscountPercent]" value="<?= htmlspecialcharsbx($arRule['PRIVILEGES']['deliveryDiscountPercent']) ?>" class="leglol-numeric-input" min="0" max="100" step="0.01"> %
+        </td>
+    </tr>
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_PRIV_ADD_MULTIPLIER") ?: 'Повышенный коэффициент начисляемых бонусов' ?></td>
+        <td>
+            <input type="number" name="PRIVILEGES[addBonusMultiplier]" value="<?= htmlspecialcharsbx($arRule['PRIVILEGES']['addBonusMultiplier']) ?>" class="leglol-numeric-input" min="0" step="0.01">
+        </td>
+    </tr>
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_PRIV_SPEND_MULTIPLIER") ?: 'Повышенный коэффициент бонусов, разрешенных к списанию' ?></td>
+        <td>
+            <input type="number" name="PRIVILEGES[spendBonusMultiplier]" value="<?= htmlspecialcharsbx($arRule['PRIVILEGES']['spendBonusMultiplier']) ?>" class="leglol-numeric-input" min="0" step="0.01">
+        </td>
+    </tr>
     <?php
     $tabControl->Buttons([
         "btnSave" => true, "btnApply" => true, "btnCancel" => true,

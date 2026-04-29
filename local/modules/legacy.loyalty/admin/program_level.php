@@ -97,7 +97,7 @@ function renderLevelRuleCard($rule, $APPLICATION) {
         </div>
     </div>
     <div class="leglol-amount-block">
-        <strong class="leglol-14px"><?= htmlspecialcharsbx($rule['NAME']) ?></strong>
+        <strong class="leglol-14px"><?= htmlspecialcharsbx($rule['NAME']) ?> [<?= (int)$rule['ID'] ?>]</strong>
     </div>
 </div>
 <?php
