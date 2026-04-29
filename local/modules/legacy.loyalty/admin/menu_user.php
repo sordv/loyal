@@ -211,7 +211,30 @@ function openLevelPopup(userId, currentLevelId) {
             </form>
         `,
         buttons: BX.UI.Dialogs.MessageBoxButtons.OK,
-        okCaption: BX.message('OK')
+        okCaption: BX.message('OK'),
+        onOk: function() {
+            var select = document.querySelector('select[name="level_id"]');
+            var levelId = select ? select.value : '';
+
+            if (!levelId || levelId == '') {
+                alert(BX.message('INVALID'));
+                return false;
+            }
+            BX.ajax({
+                method: 'POST',
+                url: window.location.href,
+                data: BX.ajax.prepareData({
+                    action: 'level',
+                    user_id: userId,
+                    level_id: levelId,
+                    sessid: '<?=bitrix_sessid()?>'
+                }),
+                onsuccess: function() {
+                    location.reload();
+                }
+            });
+            return false;
+        }
     });
 }
 
