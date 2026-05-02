@@ -75,9 +75,6 @@ function renderLevelRuleCard($rule, $APPLICATION) {
         <div>
             <span title="<?= $statusTitle ?>"><?= $statusEmoji ?></span>
             <span class="leglol-rule-left"><?= Loc::getMessage("LEGACY_LOYALTY_VIEW_PRIORITY") ?><b><?= (int)$rule['SORT'] ?></b></span>
-            <?php if ((int)$rule['PERIOD'] > 0): ?>
-                <span class="leglol-rule-left"><?= Loc::getMessage("LEGACY_LOYALTY_VIEW_PERIOD") ?><b><?= (int)$rule['PERIOD'] ?> дн.</b></span>
-            <?php endif; ?>
         </div>
         <div class="leglol-rule-actions">
             <a href="level_rule_edit.php?ID=<?= $rule['ID'] ?>&lang=<?= LANG ?>"

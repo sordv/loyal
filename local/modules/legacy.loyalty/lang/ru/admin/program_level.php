@@ -18,8 +18,6 @@ $MESS["LEGACY_LOYALTY_CONFIRM_DELETE_RULE"] = "Вы действительно �
 $MESS["LEGACY_LOYALTY_VIEW_ACTIVE"] = "Активно";
 $MESS["LEGACY_LOYALTY_VIEW_INACTIVE"] = "Не активно";
 $MESS["LEGACY_LOYALTY_VIEW_PRIORITY"] = "Приоритет: ";
-$MESS["LEGACY_LOYALTY_VIEW_PERIOD"] = "Период: ";
-
 // Общие для программы настройки
 $MESS["LEGACY_LOYALTY_LEVEL_SETTINGS_PLACEHOLDER"] = "blup";
 

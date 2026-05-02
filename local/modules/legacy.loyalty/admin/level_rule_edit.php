@@ -21,7 +21,6 @@ if (empty($arRule)) {
     $arRule['ACTIVE'] = 'Y';
     $arRule['SORT'] = 100;
     $arRule['NAME'] = '';
-    $arRule['PERIOD'] = 0;
     $arRule['CONDITIONS'] = [];
     $arRule['PRIVILEGES'] = [];
 }
@@ -79,7 +78,6 @@ if ($request->isPost() && check_bitrix_sessid()) {
         "ACTIVE" => $request->getPost("ACTIVE") === "Y" ? "Y" : "N",
         "SORT" => (int)$request->getPost("SORT"),
         "NAME" => trim($request->getPost("NAME")),
-        "PERIOD" => (int)$request->getPost("PERIOD"),
         "CONDITIONS" => $conditionsToSave,
         "PRIVILEGES" => normalizeLevelPrivileges($request->getPost("PRIVILEGES")),
     ];
@@ -183,15 +181,6 @@ if (!defined('BT_COND_BUILD_USER')) define('BT_COND_BUILD_USER', 'user');
         <td><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_NAME") ?> <span style="color:#c00">*</span></td>
         <td>
             <input type="text" name="NAME" value="<?= htmlspecialcharsbx($arRule['NAME']) ?>" style="width:100%;max-width:400px;">
-        </td>
-    </tr>
-
-    <!-- Период оценки -->
-    <tr>
-        <td><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_PERIOD") ?></td>
-        <td>
-            <input type="number" name="PERIOD" value="<?= (int)$arRule['PERIOD'] ?>" class="leglol-numeric-input" min="0">
-            <br><small style="color:#666"><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_PERIOD_HINT") ?></small>
         </td>
     </tr>
 

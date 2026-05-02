@@ -11,8 +11,6 @@ $MESS["LEGACY_LOYALTY_LEVEL_COND_INIT_ERROR"] = "Ошибка инициализ
 $MESS["LEGACY_LOYALTY_LEVEL_ACTIVE"] = "Активно";
 $MESS["LEGACY_LOYALTY_LEVEL_SORT"] = "Приоритет (сортировка)";
 $MESS["LEGACY_LOYALTY_LEVEL_NAME"] = "Название уровня";
-$MESS["LEGACY_LOYALTY_LEVEL_PERIOD"] = "Период оценки (дней)";
-$MESS["LEGACY_LOYALTY_LEVEL_PERIOD_HINT"] = "0 = условия проверяются бессрочно; >0 = только за указанное количество дней";
 $MESS["LEGACY_LOYALTY_LEVEL_CONDITIONS"] = "Условия получения уровня";
 $MESS["LEGACY_LOYALTY_LEVEL_PRIVILEGES"] = "Награды уровня";
 $MESS["LEGACY_LOYALTY_LEVEL_PRIVILEGES_PLACEHOLDER"] = "Конструктор наград будет добавлен в следующей версии. Пока награды не настраиваются.";

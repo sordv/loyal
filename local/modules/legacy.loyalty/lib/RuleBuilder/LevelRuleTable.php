@@ -18,7 +18,6 @@ class LevelRuleTable extends DataManager {
             new IntegerField('SORT', ['default' => 100]),
             new StringField('ACTIVE', ['default' => 'Y', 'values' => ['Y', 'N']]),
             new StringField('NAME', ['size' => 255]),
-            new IntegerField('PERIOD', ['default' => null]),
             new TextField('CONDITIONS', ['serialized' => true]),
             new TextField('PRIVILEGES', ['serialized' => true]),
         ];
