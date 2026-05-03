@@ -2,10 +2,20 @@
 
 namespace Legacy\Loyalty\Service;
 
+use Bitrix\Main\Config\Option;
 use Bitrix\Main\Loader;
 use Legacy\Loyalty\ProgramTable;
 
 class ProgramService {
+    /**
+     * Подпись бонусов для фронтенда (задаётся в админке program_bonus.php, хранится в options).
+     */
+    public static function getBonusDisplayName(): string {
+        $name = trim((string)Option::get('legacy.loyalty', 'bonus_name', 'Бонусы'));
+
+        return $name !== '' ? $name : 'Бонусы';
+    }
+
     public static function isBonusEnabled(): bool {
         return self::isEnabled('bonus');
     }

@@ -93,9 +93,5 @@ CREATE TABLE IF NOT EXISTS b_legacy_loyalty_system_log (
     TARGET_ID INT NULL,
     OLD_VALUE TEXT NULL,
     NEW_VALUE TEXT NULL,
-    ADMIN_ID INT NULL,
-    IP VARCHAR(45) NULL,
-    INDEX idx_action (ACTION),
-    INDEX idx_target (TARGET_TYPE, TARGET_ID),
-    INDEX idx_created (CREATED_AT)
+    ADMIN_ID INT NULL
 );

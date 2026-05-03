@@ -31,11 +31,6 @@ $options = [
         'label' => Loc::getMessage('LEGACY_LOYALTY_OPT_SHOW_CART_SPEND_BONUS'),
         'default' => 'Y',
     ],
-    'bonus_name' => [
-        'label' => Loc::getMessage('LEGACY_LOYALTY_OPT_BONUS_NAME'),
-        'default' => Loc::getMessage('LEGACY_LOYALTY_OPT_BONUS_NAME_DEFAULT'),
-        'type' => 'text',
-    ],
 ];
 
 if ($request->isPost() && check_bitrix_sessid()) {

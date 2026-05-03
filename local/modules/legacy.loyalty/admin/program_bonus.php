@@ -4,6 +4,7 @@ use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Config\Option;
 use Bitrix\Main\Application;
+use Legacy\Loyalty\Service\ProgramService;
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 Loc::loadMessages($_SERVER["DOCUMENT_ROOT"]."/local/modules/legacy.loyalty/admin/program_bonus.php");
@@ -42,7 +43,7 @@ if ($request->isPost() && check_bitrix_sessid() && $request->getPost('save_setti
     $message = ["TYPE" => "OK", "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_SAVED")];
 }
 
-$bonusName = Option::get("legacy.loyalty", "bonus_name", "Бонусы");
+$bonusName = ProgramService::getBonusDisplayName();
 $bonusLifetime = Option::get("legacy.loyalty", "bonus_lifetime", "365");
 $bonusDelay = Option::get("legacy.loyalty", "bonus_delay", "1");
 

@@ -145,7 +145,7 @@ Class legacy_loyalty extends CModule {
         }
 
         \CAgent::RemoveAgent('\Legacy\Loyalty\Service\LevelBulkSyncService::runDailyAgent();', 'legacy.loyalty');
-        BonusHandler::unregisterAgents();
+        \CAgent::RemoveAgent('\Legacy\Loyalty\Service\BonusService::cleanupExpiredBonuses();', 'legacy.loyalty');
 
         return true;
     }

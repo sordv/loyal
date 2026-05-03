@@ -26,6 +26,10 @@ class LevelBulkSyncService {
         return ConvertTimeStamp($ts, 'FULL');
     }
 
+    public static function nextDailyAgentRunFull(): string {
+        return self::nextRunDateTimeFull(3, 0);
+    }
+
     public static function registerDailyAgent(): void {
         self::unregisterDailyAgent();
 
@@ -36,7 +40,7 @@ class LevelBulkSyncService {
             86400,
             '',
             'Y',
-            self::nextRunDateTimeFull(3, 0),
+            self::nextDailyAgentRunFull(),
             30
         );
     }
