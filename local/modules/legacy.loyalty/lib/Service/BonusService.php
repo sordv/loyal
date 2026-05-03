@@ -3,10 +3,12 @@
 namespace Legacy\Loyalty\Service;
 
 use Bitrix\Main\Config\Option;
-use Bitrix\Main\Type\DateTime;
 use Bitrix\Main\Application;
 
 class BonusService {
+    /** Строка для \CAgent (ежедневное удаление просроченных начислений). */
+    public const AGENT_CLEANUP_EXPIRED = '\Legacy\Loyalty\Service\BonusService::cleanupExpiredBonuses();';
+
     private static function getSettings() {
         return [
             'lifetime' => max(0, (int)Option::get("legacy.loyalty", "bonus_lifetime", 365)),
@@ -22,14 +24,20 @@ class BonusService {
         return $date->format('Y-m-d');
     }
 
-    public static function cleanupExpiredBonuses() {
+    /**
+     * Удаляет записи с истёкшим EXPIRE_AT. Вызывается агентом раз в сутки — должен вернуть строку агента.
+     */
+    public static function cleanupExpiredBonuses(): string {
         $connection = Application::getConnection();
-        $today = self::getDate(0);
+        $sqlHelper = $connection->getSqlHelper();
+        $today = $sqlHelper->forSql(self::getDate(0));
         $connection->queryExecute("
             DELETE FROM b_legacy_loyalty_bonus_user
             WHERE EXPIRE_AT IS NOT NULL 
                 AND EXPIRE_AT < '{$today}'
         ");
+
+        return self::AGENT_CLEANUP_EXPIRED;
     }
 
     public static function addBonus($userId, $amount) {

@@ -4,6 +4,7 @@ use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Application;
 use Legacy\Loyalty\RuleBuilder\LevelRuleTable;
+use Legacy\Loyalty\Service\LevelBulkSyncService;
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 Loc::loadMessages($_SERVER["DOCUMENT_ROOT"]."/local/modules/legacy.loyalty/admin/program_level.php");
@@ -26,6 +27,7 @@ if ($request->get('action') === 'delete' && check_bitrix_sessid()) {
         $rule = \Legacy\Loyalty\RuleBuilder\LevelRuleTable::getById($ruleId)->fetch();
         if ($rule) {
             \Legacy\Loyalty\RuleBuilder\LevelRuleTable::delete($ruleId);
+            LevelBulkSyncService::syncAllRegisteredUsers();
             LocalRedirect($APPLICATION->GetCurPageParam() . '&deleted=Y');
         }
     }

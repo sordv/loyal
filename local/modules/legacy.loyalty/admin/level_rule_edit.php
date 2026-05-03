@@ -3,6 +3,7 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Application;
 use Legacy\Loyalty\RuleBuilder\LevelRuleTable;
+use Legacy\Loyalty\Service\LevelBulkSyncService;
 use Legacy\Loyalty\Conditions as LoyaltyConditions;
 use Legacy\Loyalty\Conditions\User as UserConditions;
 
@@ -100,6 +101,8 @@ if ($request->isPost() && check_bitrix_sessid()) {
         } elseif (!$ID) {
             $ID = $res->getId();
         }
+
+        LevelBulkSyncService::syncAllRegisteredUsers();
 
         $redirectParams = "?lang=" . LANG;
         if ($parseError) {

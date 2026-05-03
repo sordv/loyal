@@ -1,8 +1,11 @@
 <?php
 
-use \Bitrix\Main\ModuleManager;
-use \Bitrix\Main\Localization\Loc;
-use \Bitrix\Main\Application;
+use Bitrix\Main\Application;
+use Bitrix\Main\Loader;
+use Bitrix\Main\Localization\Loc;
+use Bitrix\Main\ModuleManager;
+use Legacy\Loyalty\EventHandler\BonusHandler;
+use Legacy\Loyalty\Service\LevelBulkSyncService;
 
 Loc::loadMessages(__FILE__);
 
@@ -76,6 +79,13 @@ Class legacy_loyalty extends CModule {
             'onSaleComponentOrderResultPrepared'
         );
 
+        if (!Loader::includeModule($this->MODULE_ID)) {
+            return false;
+        }
+
+        LevelBulkSyncService::registerDailyAgent();
+        BonusHandler::registerAgents();
+
         return true;
     }
 
@@ -121,6 +131,22 @@ Class legacy_loyalty extends CModule {
             'onSaleComponentOrderResultPrepared'
         );
 
+        $entityClass = '\Legacy\Loyalty\RuleBuilder\LevelRuleTable';
+        $handlerClass = '\Legacy\Loyalty\EventHandler\LevelRuleSyncHandler';
+        foreach (['OnAfterAdd', 'OnAfterUpdate', 'OnAfterDelete'] as $eventName) {
+            \Bitrix\Main\EventManager::getInstance()->unregisterEventHandler(
+                '',
+                $entityClass,
+                $eventName,
+                $this->MODULE_ID,
+                $handlerClass,
+                'onAfterRuleChanged'
+            );
+        }
+
+        \CAgent::RemoveAgent('\Legacy\Loyalty\Service\LevelBulkSyncService::runDailyAgent();', 'legacy.loyalty');
+        BonusHandler::unregisterAgents();
+
         return true;
     }
 
@@ -128,10 +154,11 @@ Class legacy_loyalty extends CModule {
         global $APPLICATION;
 
         $this->InstallDB();
-        $this->InstallEvents();
         $this->InstallFiles();
 
         ModuleManager::registerModule($this->MODULE_ID);
+        $this->InstallEvents();
+
         $APPLICATION->IncludeAdminFile(Loc::getMessage("LEGACY_LOYALTY_INSTALL_TITLE"), __DIR__ . "/step.php");
     }
 
@@ -143,8 +170,8 @@ Class legacy_loyalty extends CModule {
         if($request["step"]<2) {
             $APPLICATION->IncludeAdminFile(Loc::getMessage("LEGACY_LOYALTY_UNINSTALL_TITLE"), __DIR__ . "/unstep1.php");
         } elseif($request["step"]==2) {
-            $this->UnInstallFiles();
             $this->UnInstallEvents();
+            $this->UnInstallFiles();
 
             if($request["savedata"] != "Y")
                 $this->UnInstallDB();

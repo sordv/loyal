@@ -5,7 +5,9 @@ namespace Legacy\Loyalty\Service;
 use Bitrix\Main\Application;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Type\DateTime;
+use Bitrix\Main\UserTable;
 use Bitrix\Sale\Order;
+use Legacy\Loyalty\RuleBuilder\LevelRuleTable;
 
 class LevelService {
     public static function setLevel($userId, $levelId)
@@ -202,5 +204,272 @@ class LevelService {
             'count' => (int)($row['CNT'] ?? 0),
             'sum' => (float)($row['SUM_PRICE'] ?? 0),
         ];
+    }
+
+    public static function findBestMatchingLevelRuleId(int $userId): ?int {
+        if ($userId <= 0 || !Loader::includeModule('sale')) {
+            return null;
+        }
+
+        $rules = LevelRuleTable::getList([
+            'filter' => ['=ACTIVE' => 'Y'],
+            'order' => ['SORT' => 'ASC', 'ID' => 'ASC'],
+        ]);
+
+        while ($rule = $rules->fetch()) {
+            $tree = $rule['CONDITIONS'];
+            if (!is_array($tree)) {
+                $tree = [];
+            }
+
+            if (self::matchLevelConditionsTree($tree, $userId)) {
+                return (int)$rule['ID'];
+            }
+        }
+
+        return null;
+    }
+
+    public static function syncUserLevelFromRules(int $userId): void {
+        if ($userId <= 0 || !ProgramService::isLevelEnabled()) {
+            return;
+        }
+
+        if (!Loader::includeModule('sale')) {
+            return;
+        }
+
+        $bestRuleId = self::findBestMatchingLevelRuleId($userId);
+
+        $connection = Application::getConnection();
+        $row = $connection->query(
+            'SELECT LEVEL_ID FROM b_legacy_loyalty_level_user WHERE USER_ID = ' . (int)$userId . ' ORDER BY ID DESC LIMIT 1'
+        )->fetch();
+
+        $currentLevelId = ($row && (int)$row['LEVEL_ID'] > 0) ? (int)$row['LEVEL_ID'] : null;
+
+        if ($bestRuleId === null) {
+            if ($currentLevelId !== null) {
+                self::clearUserLevel($userId);
+            }
+            return;
+        }
+
+        if ($currentLevelId === $bestRuleId) {
+            return;
+        }
+
+        self::setLevel($userId, $bestRuleId);
+    }
+
+    private static function clearUserLevel(int $userId): void {
+        $connection = Application::getConnection();
+        $userId = (int)$userId;
+
+        $current = $connection->query(
+            'SELECT ID, LEVEL_ID FROM b_legacy_loyalty_level_user WHERE USER_ID = ' . $userId . ' ORDER BY ID DESC LIMIT 1'
+        )->fetch();
+
+        if (!$current || (int)$current['LEVEL_ID'] <= 0) {
+            return;
+        }
+
+        $oldLevel = (int)$current['LEVEL_ID'];
+        $rowId = (int)$current['ID'];
+
+        try {
+            $connection->startTransaction();
+
+            $connection->queryExecute(
+                'INSERT INTO b_legacy_loyalty_level_history (USER_ID, OLD_LEVEL_ID, NEW_LEVEL_ID, SOURCE) VALUES ('
+                . $userId . ', ' . $oldLevel . ', NULL, \'system\')'
+            );
+
+            $connection->queryExecute(
+                'DELETE FROM b_legacy_loyalty_level_user WHERE ID = ' . $rowId
+            );
+
+            $connection->commitTransaction();
+        } catch (\Exception $ex) {
+            $connection->rollbackTransaction();
+            throw $ex;
+        }
+    }
+
+    private static function matchLevelConditionsTree(array $tree, int $userId): bool {
+        if (!isset($tree['children']) || !is_array($tree['children']) || count($tree['children']) === 0) {
+            return true;
+        }
+
+        $children = array_values($tree['children']);
+        $all = (($tree['values']['All'] ?? 'AND') === 'OR') ? 'OR' : 'AND';
+        $true = (($tree['values']['True'] ?? 'True') !== 'False');
+        $matched = self::matchLevelConditionChildren($children, $userId, $all);
+
+        return $true ? $matched : !$matched;
+    }
+
+    private static function matchLevelConditionChildren(array $children, int $userId, string $all): bool {
+        if ($all === 'OR') {
+            foreach ($children as $child) {
+                if (self::matchLevelConditionNode(is_array($child) ? $child : [], $userId)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        foreach ($children as $child) {
+            if (!self::matchLevelConditionNode(is_array($child) ? $child : [], $userId)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static function matchLevelConditionNode(array $node, int $userId): bool {
+        if (($node['controlId'] ?? '') === 'CondGroup') {
+            return self::matchLevelConditionsTree($node, $userId);
+        }
+
+        if (!empty($node['children'])) {
+            return self::matchLevelConditionsTree($node, $userId);
+        }
+
+        return self::matchUserProfileCondition($node, $userId);
+    }
+
+    private static function matchUserProfileCondition(array $node, int $userId): bool {
+        $id = (string)($node['controlId'] ?? '');
+        $values = $node['values'] ?? [];
+        $logic = (string)($values['logic'] ?? 'Equal');
+
+        switch ($id) {
+            case 'ordersSum':
+                $stats = self::getCompletedOrdersStats($userId, null);
+
+                return self::compareNumber($stats['sum'], (float)($values['value'] ?? 0), $logic);
+
+            case 'ordersCount':
+                $stats = self::getCompletedOrdersStats($userId, null);
+
+                return self::compareNumber($stats['count'], (float)($values['value'] ?? 0), $logic);
+
+            case 'ordersSumPeriod':
+                $period = max(1, (int)($values['period'] ?? 30));
+                $stats = self::getCompletedOrdersStats($userId, $period);
+
+                return self::compareNumber($stats['sum'], (float)($values['value'] ?? 0), $logic);
+
+            case 'ordersCountPeriod':
+                $period = max(1, (int)($values['period'] ?? 30));
+                $stats = self::getCompletedOrdersStats($userId, $period);
+
+                return self::compareNumber($stats['count'], (float)($values['value'] ?? 0), $logic);
+
+            case 'registrationAge':
+                $ageDays = self::getUserRegistrationAgeDays($userId);
+                if ($ageDays === null) {
+                    return false;
+                }
+
+                return self::compareNumber($ageDays, (float)($values['value'] ?? 0), $logic);
+
+            case 'registrationDate':
+                $userTs = self::getUserRegistrationTimestamp($userId);
+                if ($userTs === null) {
+                    return false;
+                }
+                $expected = trim((string)($values['value'] ?? ''));
+                if ($expected === '') {
+                    return false;
+                }
+                $condTs = self::parseDateTimeToTs($expected);
+                if ($condTs === null) {
+                    return false;
+                }
+
+                return self::compareNumber($userTs, (float)$condTs, $logic);
+        }
+
+        return false;
+    }
+
+    private static function getUserRegistrationAgeDays(int $userId): ?int {
+        $ts = self::getUserRegistrationTimestamp($userId);
+        if ($ts === null) {
+            return null;
+        }
+
+        return (int)floor((time() - $ts) / 86400);
+    }
+
+    private static function getUserRegistrationTimestamp(int $userId): ?int {
+        $row = UserTable::getList([
+            'filter' => ['=ID' => $userId],
+            'select' => ['DATE_REGISTER'],
+            'limit' => 1,
+        ])->fetch();
+
+        if (!$row || empty($row['DATE_REGISTER'])) {
+            return null;
+        }
+
+        $dr = $row['DATE_REGISTER'];
+        if ($dr instanceof \Bitrix\Main\Type\DateTime) {
+            return $dr->getTimestamp();
+        }
+
+        if ($dr instanceof \DateTimeInterface) {
+            return $dr->getTimestamp();
+        }
+
+        $parsed = MakeTimeStamp((string)$dr);
+        if ($parsed === false) {
+            return null;
+        }
+
+        return (int)$parsed;
+    }
+
+    private static function parseDateTimeToTs(string $value): ?int {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        $ts = MakeTimeStamp($value);
+        if ($ts !== false) {
+            return (int)$ts;
+        }
+
+        $ts = strtotime($value);
+
+        return $ts !== false ? (int)$ts : null;
+    }
+
+    private static function compareNumber($actual, $expected, string $logic): bool {
+        $actual = (float)str_replace(',', '.', (string)$actual);
+        $expected = (float)str_replace(',', '.', (string)$expected);
+
+        switch ($logic) {
+            case 'Not':
+                return $actual != $expected;
+            case 'Greater':
+            case 'Great':
+            case 'EqGr':
+                return $actual > $expected;
+            case 'Less':
+                return $actual < $expected;
+            case 'GreaterEqual':
+                return $actual >= $expected;
+            case 'LessEqual':
+            case 'EqLs':
+                return $actual <= $expected;
+            case 'Equal':
+            default:
+                return $actual == $expected;
+        }
     }
 }

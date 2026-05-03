@@ -23,6 +23,7 @@ return [
                 "program_event.php",
                 "bonus_rule_edit.php",
                 "level_rule_edit.php",
+                "secret.php",
             ],
         ],
         [
