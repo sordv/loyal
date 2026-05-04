@@ -2,7 +2,7 @@
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Application;
-use Legacy\Loyalty\RuleBuilder\BonusRuleTable;
+use Legacy\Loyalty\Tables\BonusRuleTable;
 use Legacy\Loyalty\Conditions as LoyaltyConditions;
 use Legacy\Loyalty\Conditions\Order as OrderConditions;
 use Legacy\Loyalty\Conditions\Product as ProductConditions;

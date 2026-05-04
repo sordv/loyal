@@ -23,10 +23,10 @@ $message = null;
 
 if ($request->get('action') === 'delete' && check_bitrix_sessid()) {
     $ruleId = (int)$request->get('rule_id');
-    if ($ruleId > 0 && class_exists('Legacy\Loyalty\RuleBuilder\BonusRuleTable')) {
-        $rule = \Legacy\Loyalty\RuleBuilder\BonusRuleTable::getById($ruleId)->fetch();
+    if ($ruleId > 0 && class_exists('Legacy\Loyalty\Tables\BonusRuleTable')) {
+        $rule = \Legacy\Loyalty\Tables\BonusRuleTable::getById($ruleId)->fetch();
         if ($rule) {
-            \Legacy\Loyalty\RuleBuilder\BonusRuleTable::delete($ruleId);
+            \Legacy\Loyalty\Tables\BonusRuleTable::delete($ruleId);
             LocalRedirect($APPLICATION->GetCurPageParam() . '&deleted=Y');
         }
     }
@@ -75,13 +75,13 @@ if (Loader::includeModule('sale')) {
 
 $addRules = [];
 $spendRules = [];
-if (class_exists('Legacy\Loyalty\RuleBuilder\BonusRuleTable')) {
+if (class_exists('Legacy\Loyalty\Tables\BonusRuleTable')) {
     try {
-        $addRules = \Legacy\Loyalty\RuleBuilder\BonusRuleTable::getList([
+        $addRules = \Legacy\Loyalty\Tables\BonusRuleTable::getList([
             'filter' => ['TYPE' => 'add'],
             'order' => ['SORT' => 'ASC']
         ])->fetchAll();
-        $spendRules = \Legacy\Loyalty\RuleBuilder\BonusRuleTable::getList([
+        $spendRules = \Legacy\Loyalty\Tables\BonusRuleTable::getList([
             'filter' => ['TYPE' => 'spend'],
             'order' => ['SORT' => 'ASC']
         ])->fetchAll();

@@ -4,7 +4,7 @@ use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Application;
 use Bitrix\Main\Config\Option;
-use Legacy\Loyalty\RuleBuilder\LevelRuleTable;
+use Legacy\Loyalty\Tables\LevelRuleTable;
 use Legacy\Loyalty\Service\LevelBulkSyncService;
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
@@ -24,10 +24,10 @@ $message = null;
 
 if ($request->get('action') === 'delete' && check_bitrix_sessid()) {
     $ruleId = (int)$request->get('rule_id');
-    if ($ruleId > 0 && class_exists('Legacy\Loyalty\RuleBuilder\LevelRuleTable')) {
-        $rule = \Legacy\Loyalty\RuleBuilder\LevelRuleTable::getById($ruleId)->fetch();
+    if ($ruleId > 0 && class_exists('Legacy\Loyalty\Tables\LevelRuleTable')) {
+        $rule = \Legacy\Loyalty\Tables\LevelRuleTable::getById($ruleId)->fetch();
         if ($rule) {
-            \Legacy\Loyalty\RuleBuilder\LevelRuleTable::delete($ruleId);
+            \Legacy\Loyalty\Tables\LevelRuleTable::delete($ruleId);
             LevelBulkSyncService::syncAllRegisteredUsers();
             LocalRedirect($APPLICATION->GetCurPageParam() . '&deleted=Y');
         }
@@ -46,9 +46,9 @@ if ($request->isPost() && check_bitrix_sessid() && $request->getPost('save_setti
 $mailLevelChange = Option::get('legacy.loyalty', 'mail_level_change', 'N');
 
 $levelRules = [];
-if (class_exists('Legacy\Loyalty\RuleBuilder\LevelRuleTable')) {
+if (class_exists('Legacy\Loyalty\Tables\LevelRuleTable')) {
     try {
-        $levelRules = \Legacy\Loyalty\RuleBuilder\LevelRuleTable::getList([
+        $levelRules = \Legacy\Loyalty\Tables\LevelRuleTable::getList([
             'order' => [
                 'SORT' => 'ASC',
                 'ID' => 'DESC'], //todo надо аналогично бонусам

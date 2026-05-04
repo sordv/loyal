@@ -1,6 +1,12 @@
 *
 
-!local/modules/legacy.loyalty/
-!local/modules/legacy.loyalty/**/*
-
 !.gitignore
+
+!/local/
+!/local/modules/
+!/local/modules/legacy.loyalty/
+
+!local/modules/legacy.loyalty/**
+
+local/modules/legacy.loyalty/**/phpinfo.php
+local/modules/legacy.loyalty/**/secret.php

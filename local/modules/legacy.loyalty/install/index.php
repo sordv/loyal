@@ -219,7 +219,7 @@ Class legacy_loyalty extends CModule {
             'onSaleComponentOrderResultPrepared'
         );
 
-        $entityClass = '\Legacy\Loyalty\RuleBuilder\LevelRuleTable';
+        $entityClass = '\Legacy\Loyalty\Tables\LevelRuleTable';
         $handlerClass = '\Legacy\Loyalty\EventHandler\LevelRuleSyncHandler';
         foreach (['OnAfterAdd', 'OnAfterUpdate', 'OnAfterDelete'] as $eventName) {
             \Bitrix\Main\EventManager::getInstance()->unregisterEventHandler(
