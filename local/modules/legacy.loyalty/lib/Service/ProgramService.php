@@ -4,7 +4,7 @@ namespace Legacy\Loyalty\Service;
 
 use Bitrix\Main\Config\Option;
 use Bitrix\Main\Loader;
-use Legacy\Loyalty\ProgramTable;
+use Legacy\Loyalty\Tables\ProgramTable;
 
 class ProgramService {
     /**

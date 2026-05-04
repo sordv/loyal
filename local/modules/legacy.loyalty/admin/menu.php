@@ -23,7 +23,6 @@ return [
                 "program_event.php",
                 "bonus_rule_edit.php",
                 "level_rule_edit.php",
-                "secret.php",
             ],
         ],
         [
@@ -36,7 +35,7 @@ return [
         ],
         [
             "text" => Loc::getMessage("LEGACY_LOYALTY_MENU_MANUAL"),
-            "url" => "menu_manual.php",
+            "url" => "menu_guide.php",
         ],
     ]
 ];

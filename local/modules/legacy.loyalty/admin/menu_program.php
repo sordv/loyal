@@ -3,7 +3,7 @@
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Application;
 use Bitrix\Main\Loader;
-use Legacy\Loyalty\ProgramTable;
+use Legacy\Loyalty\Tables\ProgramTable;
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 
@@ -61,38 +61,32 @@ $oSort = new CAdminSorting($sTableID, "ID", "asc");
 $lAdmin = new CAdminList($sTableID, $oSort);
 
 $lAdmin->AddHeaders([
+    ["id" => "TOGGLE", "content" => Loc::getMessage("LEGACY_LOYALTY_PROGRAM_TOGGLE"), "default" => true],
     ["id" => "ID", "content" => Loc::getMessage("LEGACY_LOYALTY_PROGRAM_ID"), "sort" => "ID", "default" => true],
-    ["id" => "TYPE", "content" => Loc::getMessage("LEGACY_LOYALTY_PROGRAM_TYPE"), "default" => true],
-    ["id" => "ACTIVE", "content" => Loc::getMessage("LEGACY_LOYALTY_PROGRAM_STATUS"), "default" => true],
+    ["id" => "NAME", "content" => Loc::getMessage("LEGACY_LOYALTY_PROGRAM_TYPE"), "default" => true],
 ]);
 
 while ($program = $result->fetch()) {
     $row = &$lAdmin->AddRow($program['ID'], $program);
 
+    $toggleUrl = htmlspecialcharsbx(
+        '?action=toggle&id=' . (int)$program['ID'] . '&' . bitrix_sessid_get()
+    );
+
+    $toggleTitle = htmlspecialcharsbx(Loc::getMessage("LEGACY_LOYALTY_PROGRAM_TOGGLE_TITLE"));
+
+    $checkboxHtml =
+        '<label class="leglol-prog-toggle" title="' . $toggleTitle . '">'
+        . '<input type="checkbox"'
+        . ($program['ACTIVE'] === 'Y' ? ' checked' : '')
+        . ' onchange="window.location.href=\'' . $toggleUrl . '\'">'
+        . '</label>';
+
+    $row->AddViewField("TOGGLE", $checkboxHtml);
+
     $row->AddField("ID", $program['ID']);
 
-    $row->AddField(
-        "TYPE",
-        htmlspecialcharsbx($programTypes[$program['TYPE']] ?? $program['NAME'])
-    );
-
-    $row->AddViewField(
-        "ACTIVE",
-        $program['ACTIVE'] === 'Y'
-            ? '<span class="leglol-active">Включена</span>'
-            : '<span class="leglol-inactive">Выключена</span>'
-    );
-
-    $actions = [];
-
-    $actions[] = [
-        "TEXT" => $program['ACTIVE'] === 'Y' ? Loc::getMessage("LEGACY_LOYALTY_TURN_OFF") : Loc::getMessage("LEGACY_LOYALTY_TURN_ON"),
-        "ACTION" => "window.location='?action=toggle&id=".$program['ID']."&".bitrix_sessid_get()."'",
-        "DEFAULT" => true
-    ];
-
     $editUrl = '';
-
     switch ($program['TYPE']) {
         case 'bonus':
             $editUrl = 'program_bonus.php';
@@ -105,12 +99,16 @@ while ($program = $result->fetch()) {
             break;
     }
 
-    $actions[] = [
-        "TEXT" => Loc::getMessage("LEGACY_LOYALTY_EDIT"),
-        "ACTION" => "window.location='".$editUrl."?id=".$program['ID']."'"
-    ];
+    $nameText = $programTypes[$program['TYPE']] ?? $program['NAME'];
 
-    $row->AddActions($actions);
+    if ($editUrl !== '') {
+        $nameHtml = '<a href="' . htmlspecialcharsbx($editUrl . '?id=' . (int)$program['ID']) . '">'
+            . htmlspecialcharsbx($nameText) . '</a>';
+    } else {
+        $nameHtml = htmlspecialcharsbx($nameText);
+    }
+
+    $row->AddViewField("NAME", $nameHtml);
 }
 
 $lAdmin->AddAdminContextMenu([]);
@@ -124,12 +122,16 @@ $lAdmin->DisplayList();
 
 ?>
 <style>
-    .leglol-active {
-        color: green;
+    .leglol-prog-toggle {
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+        margin: 0;
     }
 
-    .leglol-inactive {
-        color: red;
+    .leglol-prog-toggle input[type="checkbox"] {
+        margin: 0;
+        cursor: pointer;
     }
 </style>
 <?php

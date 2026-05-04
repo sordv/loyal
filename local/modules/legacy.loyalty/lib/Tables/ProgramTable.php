@@ -1,6 +1,6 @@
 <?php
 
-namespace Legacy\Loyalty;
+namespace Legacy\Loyalty\Tables;
 
 use Bitrix\Main\Entity;
 use Bitrix\Main\Type;

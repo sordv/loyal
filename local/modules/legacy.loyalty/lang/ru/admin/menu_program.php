@@ -6,7 +6,9 @@ $MESS["LEGACY_LOYALTY_MODULE_NOT_INSTALLED"] = "Модуль legacy.loyalty не
 
 $MESS["LEGACY_LOYALTY_PROGRAM_ID"] = "ID";
 $MESS["LEGACY_LOYALTY_PROGRAM_TYPE"] = "Программа";
- $MESS["LEGACY_LOYALTY_PROGRAM_STATUS"] = "Статус";
+$MESS["LEGACY_LOYALTY_PROGRAM_STATUS"] = "Статус";
+$MESS["LEGACY_LOYALTY_PROGRAM_TOGGLE"] = "Вкл.";
+$MESS["LEGACY_LOYALTY_PROGRAM_TOGGLE_TITLE"] = "Включить или выключить программу";
 
 $MESS["LEGACY_LOYALTY_TYPE_BONUS"] = "Начисление/списание бонусов на заказ";
 $MESS["LEGACY_LOYALTY_TYPE_LEVEL"] = "Разбиение пользователей на уровни";
