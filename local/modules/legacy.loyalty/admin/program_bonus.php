@@ -42,6 +42,10 @@ if ($request->isPost() && check_bitrix_sessid() && $request->getPost('save_setti
     Option::set("legacy.loyalty", "bonus_delay", $request->getPost("bonus_delay"));
     Option::set("legacy.loyalty", "bonus_accrual_order_status", (string)$request->getPost("bonus_accrual_order_status"));
     Option::set("legacy.loyalty", "bonus_accrual_on_paid", $request->getPost("bonus_accrual_on_paid") === 'Y' ? 'Y' : 'N');
+    Option::set("legacy.loyalty", "mail_bonus_order", $request->getPost("mail_bonus_order") === 'Y' ? 'Y' : 'N');
+    Option::set("legacy.loyalty", "mail_bonus_admin", $request->getPost("mail_bonus_admin") === 'Y' ? 'Y' : 'N');
+    Option::set("legacy.loyalty", "mail_bonus_expire", $request->getPost("mail_bonus_expire") === 'Y' ? 'Y' : 'N');
+    Option::set("legacy.loyalty", "mail_bonus_expire_days", trim((string)$request->getPost("mail_bonus_expire_days")));
     $message = ["TYPE" => "OK", "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_SAVED")];
 }
 
@@ -50,6 +54,10 @@ $bonusLifetime = Option::get("legacy.loyalty", "bonus_lifetime", "365");
 $bonusDelay = Option::get("legacy.loyalty", "bonus_delay", "1");
 $bonusAccrualOrderStatus = Option::get("legacy.loyalty", "bonus_accrual_order_status", "F");
 $bonusAccrualOnPaid = Option::get("legacy.loyalty", "bonus_accrual_on_paid", "Y");
+$mailBonusOrder = Option::get("legacy.loyalty", "mail_bonus_order", "N");
+$mailBonusAdmin = Option::get("legacy.loyalty", "mail_bonus_admin", "N");
+$mailBonusExpire = Option::get("legacy.loyalty", "mail_bonus_expire", "N");
+$mailBonusExpireDays = Option::get("legacy.loyalty", "mail_bonus_expire_days", "7,3,1");
 
 $orderStatuses = [
     '' => Loc::getMessage("LEGACY_LOYALTY_BONUS_ACCRUAL_ORDER_STATUS_EMPTY"),
@@ -235,6 +243,44 @@ function renderBonusRuleCard($rule, $type, $APPLICATION) {
         <td><?=Loc::getMessage("LEGACY_LOYALTY_BONUS_ACCRUAL_ON_PAID")?></td>
         <td>
             <input type="checkbox" name="bonus_accrual_on_paid" value="Y" <?= $bonusAccrualOnPaid === 'Y' ? 'checked' : '' ?>>
+        </td>
+    </tr>
+
+    <tr class="heading">
+        <td colspan="2"><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_HEADING") ?></td>
+    </tr>
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_BONUS_ORDER") ?></td>
+        <td>
+            <label>
+                <input type="checkbox" name="mail_bonus_order" value="Y" <?= $mailBonusOrder === 'Y' ? 'checked' : '' ?>>
+            </label>
+            <a href="/bitrix/admin/message_admin.php?lang=<?= LANGUAGE_ID ?>&set_filter=Y&amp;find_type_id=<?= urlencode('LEGACY_LOYALTY_BONUS_ORDER_ADD') ?>" target="_blank"><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_EDIT_TEMPLATE") ?></a>
+        </td>
+    </tr>
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_BONUS_ADMIN") ?></td>
+        <td>
+            <label>
+                <input type="checkbox" name="mail_bonus_admin" value="Y" <?= $mailBonusAdmin === 'Y' ? 'checked' : '' ?>>
+            </label>
+            <a href="/bitrix/admin/message_admin.php?lang=<?= LANGUAGE_ID ?>&set_filter=Y&amp;find_type_id=<?= urlencode('LEGACY_LOYALTY_BONUS_ADMIN_ADD') ?>" target="_blank"><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_EDIT_TEMPLATE") ?></a>
+        </td>
+    </tr>
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_BONUS_EXPIRE") ?></td>
+        <td>
+            <label>
+                <input type="checkbox" name="mail_bonus_expire" value="Y" <?= $mailBonusExpire === 'Y' ? 'checked' : '' ?>>
+            </label>
+            <a href="/bitrix/admin/message_admin.php?lang=<?= LANGUAGE_ID ?>&set_filter=Y&amp;find_type_id=<?= urlencode('LEGACY_LOYALTY_BONUS_EXPIRE_WARNING') ?>" target="_blank"><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_EDIT_TEMPLATE") ?></a>
+        </td>
+    </tr>
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_BONUS_EXPIRE_DAYS") ?></td>
+        <td>
+            <input type="text" name="mail_bonus_expire_days" value="<?= htmlspecialcharsbx($mailBonusExpireDays) ?>" size="40">
+            <div style="color:#666;font-size:12px;margin-top:4px;"><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_BONUS_EXPIRE_DAYS_NOTE") ?></div>
         </td>
     </tr>
 

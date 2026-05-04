@@ -53,6 +53,19 @@ class LevelService {
             }
 
             $connection->commitTransaction();
+
+            if ((int)($oldLevel ?? 0) !== (int)$levelId) {
+                try {
+                    LoyaltyMailService::notifyLevelChanged(
+                        $userId,
+                        $oldLevel,
+                        $levelId,
+                        self::fetchLevelRuleName($oldLevel),
+                        self::fetchLevelRuleName($levelId)
+                    );
+                } catch (\Throwable $e) {
+                }
+            }
         } catch (\Exception $ex) {
             $connection->rollbackTransaction();
             throw $ex;
@@ -102,6 +115,19 @@ class LevelService {
             }
 
             $connection->commitTransaction();
+
+            if ((int)($oldLevel ?? 0) !== (int)$levelId) {
+                try {
+                    LoyaltyMailService::notifyLevelChanged(
+                        $userId,
+                        $oldLevel,
+                        $levelId,
+                        self::fetchLevelRuleName($oldLevel),
+                        self::fetchLevelRuleName($levelId)
+                    );
+                } catch (\Throwable $e) {
+                }
+            }
         } catch (\Exception $ex) {
             $connection->rollbackTransaction();
             throw $ex;
@@ -260,6 +286,19 @@ class LevelService {
         }
 
         self::setLevel($userId, $bestRuleId);
+    }
+
+    private static function fetchLevelRuleName(?int $levelId): string {
+        if ($levelId === null || $levelId <= 0) {
+            return '';
+        }
+
+        $connection = Application::getConnection();
+        $row = $connection->query(
+            'SELECT NAME FROM b_legacy_loyalty_level_rule WHERE ID = ' . (int)$levelId . ' LIMIT 1'
+        )->fetch();
+
+        return is_array($row) ? trim((string)($row['NAME'] ?? '')) : '';
     }
 
     private static function clearUserLevel(int $userId): void {

@@ -3,6 +3,7 @@
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Application;
+use Bitrix\Main\Config\Option;
 use Legacy\Loyalty\RuleBuilder\LevelRuleTable;
 use Legacy\Loyalty\Service\LevelBulkSyncService;
 
@@ -36,6 +37,13 @@ if ($request->get('action') === 'delete' && check_bitrix_sessid()) {
 if ($request->get('deleted') === 'Y') {
     $message = ["TYPE" => "OK", "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_DELETED")];
 }
+
+if ($request->isPost() && check_bitrix_sessid() && $request->getPost('save_settings')) {
+    Option::set('legacy.loyalty', 'mail_level_change', $request->getPost('mail_level_change') === 'Y' ? 'Y' : 'N');
+    $message = ["TYPE" => "OK", "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_SAVED")];
+}
+
+$mailLevelChange = Option::get('legacy.loyalty', 'mail_level_change', 'N');
 
 $levelRules = [];
 if (class_exists('Legacy\Loyalty\RuleBuilder\LevelRuleTable')) {
@@ -129,12 +137,16 @@ function renderLevelRuleCard($rule, $APPLICATION) {
     $tabControl->BeginNextTab();
     ?>
 
-    <!-- Заглушка для настроек программы уровней -->
+    <tr class="heading">
+        <td colspan="2"><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_HEADING") ?></td>
+    </tr>
     <tr>
-        <td colspan="2">
-            <div style="color:#666;background:#f9f9f9;padding:12px;border-radius:4px;">
-                <?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_SETTINGS_PLACEHOLDER") ?>
-            </div>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_LEVEL_CHANGE") ?></td>
+        <td>
+            <label>
+                <input type="checkbox" name="mail_level_change" value="Y" <?= $mailLevelChange === 'Y' ? 'checked' : '' ?>>
+            </label>
+            <a href="/bitrix/admin/message_admin.php?lang=<?= LANGUAGE_ID ?>&set_filter=Y&amp;find_type_id=<?= urlencode('LEGACY_LOYALTY_LEVEL_CHANGED') ?>" target="_blank"><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_EDIT_TEMPLATE") ?></a>
         </td>
     </tr>
 
@@ -147,6 +159,7 @@ function renderLevelRuleCard($rule, $APPLICATION) {
         "btnCancel" => true,
         "back_url" => "menu_program.php"
     ]);
+    echo '<input type="hidden" name="save_settings" value="Y">';
     $tabControl->End();
     ?>
 </form>

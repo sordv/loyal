@@ -92,6 +92,11 @@ class BonusService {
             ");
 
             $connection->commitTransaction();
+
+            try {
+                LoyaltyMailService::notifyBonusFromOrder($userId, $amount, $activateDate, $orderId);
+            } catch (\Throwable $e) {
+            }
         } catch (\Exception $ex) {
             $connection->rollbackTransaction();
             throw $ex;
@@ -149,6 +154,11 @@ class BonusService {
             ");
 
             $connection->commitTransaction();
+
+            try {
+                LoyaltyMailService::notifyBonusFromAdmin($userId, $amount, $activateDate, $expireDate);
+            } catch (\Throwable $e) {
+            }
         } catch (\Exception $ex) {
             $connection->rollbackTransaction();
             throw $ex;

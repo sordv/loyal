@@ -2,6 +2,7 @@
 
 namespace Legacy\Loyalty\EventHandler;
 
+use Legacy\Loyalty\Service\BonusExpireMailService;
 use Legacy\Loyalty\Service\BonusService;
 use Legacy\Loyalty\Service\LevelBulkSyncService;
 
@@ -21,9 +22,12 @@ class BonusHandler {
             $nextExec,
             30
         );
+
+        BonusExpireMailService::registerAgent();
     }
 
     public static function unregisterAgents(): void {
         \CAgent::RemoveAgent(BonusService::AGENT_CLEANUP_EXPIRED, 'legacy.loyalty');
+        BonusExpireMailService::unregisterAgent();
     }
 }

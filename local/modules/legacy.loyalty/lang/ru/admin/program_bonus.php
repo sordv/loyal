@@ -33,6 +33,14 @@ $MESS["LEGACY_LOYALTY_BONUS_ACCRUAL_ORDER_STATUS"] = "При переводе з
 $MESS["LEGACY_LOYALTY_BONUS_ACCRUAL_ORDER_STATUS_EMPTY"] = "Не начислять по статусу";
 $MESS["LEGACY_LOYALTY_BONUS_ACCRUAL_ON_PAID"] = "Начислять при оплате заказа";
 
+$MESS["LEGACY_LOYALTY_MAIL_HEADING"] = "Почтовые уведомления";
+$MESS["LEGACY_LOYALTY_MAIL_EDIT_TEMPLATE"] = "Шаблоны писем";
+$MESS["LEGACY_LOYALTY_MAIL_BONUS_ORDER"] = "Начисление бонусов за заказ";
+$MESS["LEGACY_LOYALTY_MAIL_BONUS_ADMIN"] = "Начисление бонусов администратором";
+$MESS["LEGACY_LOYALTY_MAIL_BONUS_EXPIRE"] = "Приближение истечения срока бонусов";
+$MESS["LEGACY_LOYALTY_MAIL_BONUS_EXPIRE_DAYS"] = "За сколько дней до списания предупреждать";
+$MESS["LEGACY_LOYALTY_MAIL_BONUS_EXPIRE_DAYS_NOTE"] = "Через запятую, например: 7,3,1";
+
 // Общие для вкладок настройки
 $MESS["LEGACY_LOYALTY_SAVED"] = "Настройки сохранены";
 $MESS["LEGACY_LOYALTY_DELETED"] = "Правило удалено";

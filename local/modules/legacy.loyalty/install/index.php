@@ -129,6 +129,8 @@ Class legacy_loyalty extends CModule {
         LevelBulkSyncService::registerDailyAgent();
         BonusHandler::registerAgents();
 
+        \Legacy\Loyalty\Mail\MailEventsInstaller::install();
+
         return true;
     }
 
@@ -232,6 +234,11 @@ Class legacy_loyalty extends CModule {
 
         \CAgent::RemoveAgent('\Legacy\Loyalty\Service\LevelBulkSyncService::runDailyAgent();', 'legacy.loyalty');
         \CAgent::RemoveAgent('\Legacy\Loyalty\Service\BonusService::cleanupExpiredBonuses();', 'legacy.loyalty');
+        \CAgent::RemoveAgent('\Legacy\Loyalty\Service\BonusExpireMailService::runDailyAgent();', 'legacy.loyalty');
+
+        if (Loader::includeModule($this->MODULE_ID)) {
+            \Legacy\Loyalty\Mail\MailEventsInstaller::uninstall();
+        }
 
         return true;
     }
