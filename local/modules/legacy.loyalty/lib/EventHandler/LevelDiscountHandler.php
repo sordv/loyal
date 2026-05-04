@@ -9,18 +9,31 @@ use Legacy\Loyalty\Service\ProgramService;
 
 class LevelDiscountHandler {
     public static function onSaleOrderBeforeSaved($event): void {
-        $order = $event->getParameter('ENTITY');
-        if ($order instanceof Order) {
-            self::applyLevelDiscounts($order);
-        }
+        self::safeRun(static function () use ($event) {
+            $order = null;
+            if ($event instanceof \Bitrix\Main\Event) {
+                $order = $event->getParameter('ENTITY');
+            }
+            if ($order instanceof Order) {
+                self::applyLevelDiscounts($order);
+            }
+        }, __METHOD__);
     }
 
-    public static function onSaleComponentOrderCreated(Order $order, &$arUserResult, $request, &$arParams, &$arResult): void {
-        self::applyLevelDiscounts($order);
+    public static function onSaleComponentOrderCreated($order, &$arUserResult, $request, &$arParams, &$arResult): void {
+        self::safeRun(static function () use ($order) {
+            if ($order instanceof Order) {
+                self::applyLevelDiscounts($order);
+            }
+        }, __METHOD__);
     }
 
-    public static function onSaleComponentOrderResultPrepared(Order $order, &$arUserResult, $request, &$arParams, &$arResult): void {
-        self::applyLevelDiscounts($order);
+    public static function onSaleComponentOrderResultPrepared($order, &$arUserResult, $request, &$arParams, &$arResult): void {
+        self::safeRun(static function () use ($order) {
+            if ($order instanceof Order) {
+                self::applyLevelDiscounts($order);
+            }
+        }, __METHOD__);
     }
 
     public static function applyLevelDiscounts(Order $order): void {
@@ -72,7 +85,13 @@ class LevelDiscountHandler {
                 continue;
             }
 
-            $newPrice = max(0, round($basePrice * (1 - $ratio), 2));
+            $levelPrice = max(0, round($basePrice * (1 - $ratio), 2));
+            $currentPrice = (float)$basketItem->getPrice();
+            if ($currentPrice > 0) {
+                $newPrice = min($currentPrice, $levelPrice);
+            } else {
+                $newPrice = $levelPrice;
+            }
             $discount = max(0, $basePrice - $newPrice);
 
             if (method_exists($basketItem, 'markFieldCustom')) {
@@ -115,6 +134,16 @@ class LevelDiscountHandler {
                 'DISCOUNT_PRICE' => max(0, $basePrice - $newPrice),
                 'CUSTOM_PRICE_DELIVERY' => 'Y',
             ]);
+        }
+    }
+
+    private static function safeRun(callable $callback, string $context): void {
+        try {
+            $callback();
+        } catch (\Throwable $e) {
+            if (function_exists('AddMessage2Log')) {
+                AddMessage2Log($context . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine(), 'legacy.loyalty');
+            }
         }
     }
 }

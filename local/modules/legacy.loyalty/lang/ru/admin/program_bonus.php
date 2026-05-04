@@ -28,6 +28,10 @@ $MESS["LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_FIXED"] = " бонусов";
 $MESS["LEGACY_LOYALTY_BONUS_NAME"] = "Название бонусов:";
 $MESS["LEGACY_LOYALTY_BONUS_LIFE"] = "Время жизни бонусов (в днях):";
 $MESS["LEGACY_LOYALTY_BONUS_DELAY"] = "Задержка начисления бонусов (в днях):";
+$MESS["LEGACY_LOYALTY_BONUS_ACCRUAL_HEADING"] = "Когда начислять бонусы";
+$MESS["LEGACY_LOYALTY_BONUS_ACCRUAL_ORDER_STATUS"] = "При переводе заказа в статус:";
+$MESS["LEGACY_LOYALTY_BONUS_ACCRUAL_ORDER_STATUS_EMPTY"] = "Не начислять по статусу";
+$MESS["LEGACY_LOYALTY_BONUS_ACCRUAL_ON_PAID"] = "Начислять при оплате заказа";
 
 // Общие для вкладок настройки
 $MESS["LEGACY_LOYALTY_SAVED"] = "Настройки сохранены";

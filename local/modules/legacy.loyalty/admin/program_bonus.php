@@ -40,12 +40,30 @@ if ($request->isPost() && check_bitrix_sessid() && $request->getPost('save_setti
     Option::set("legacy.loyalty", "bonus_name", $request->getPost("bonus_name"));
     Option::set("legacy.loyalty", "bonus_lifetime", $request->getPost("bonus_lifetime"));
     Option::set("legacy.loyalty", "bonus_delay", $request->getPost("bonus_delay"));
+    Option::set("legacy.loyalty", "bonus_accrual_order_status", (string)$request->getPost("bonus_accrual_order_status"));
+    Option::set("legacy.loyalty", "bonus_accrual_on_paid", $request->getPost("bonus_accrual_on_paid") === 'Y' ? 'Y' : 'N');
     $message = ["TYPE" => "OK", "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_SAVED")];
 }
 
 $bonusName = ProgramService::getBonusDisplayName();
 $bonusLifetime = Option::get("legacy.loyalty", "bonus_lifetime", "365");
 $bonusDelay = Option::get("legacy.loyalty", "bonus_delay", "1");
+$bonusAccrualOrderStatus = Option::get("legacy.loyalty", "bonus_accrual_order_status", "F");
+$bonusAccrualOnPaid = Option::get("legacy.loyalty", "bonus_accrual_on_paid", "Y");
+
+$orderStatuses = [
+    '' => Loc::getMessage("LEGACY_LOYALTY_BONUS_ACCRUAL_ORDER_STATUS_EMPTY"),
+];
+if (Loader::includeModule('sale')) {
+    $dbStatuses = \Bitrix\Sale\Internals\StatusLangTable::getList([
+        'order' => ['STATUS.SORT' => 'ASC'],
+        'filter' => ['STATUS.TYPE' => 'O', 'LID' => LANGUAGE_ID],
+        'select' => ['STATUS_ID', 'NAME'],
+    ]);
+    while ($status = $dbStatuses->fetch()) {
+        $orderStatuses[(string)$status['STATUS_ID']] = '[' . $status['STATUS_ID'] . '] ' . $status['NAME'];
+    }
+}
 
 $addRules = [];
 $spendRules = [];
@@ -99,7 +117,7 @@ function renderBonusRuleCard($rule, $type, $APPLICATION) {
     $amountValue = (int)$rule['AMOUNT'];
     $amountDisplay = $rule['AMOUNT_TYPE'] === 'percent'
         ? "{$amountValue}" . Loc::getMessage("LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_PERCENT")
-        : "{$amountValue}" . Loc::getMessage("LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_FIXED")
+        : "{$amountValue}" . Loc::getMessage("LEGACY_LOYALTY_VIEW_AMOUNT_TYPE_FIXED");
 ?>
 
 <div class="leglol-rule-card">
@@ -197,6 +215,27 @@ function renderBonusRuleCard($rule, $type, $APPLICATION) {
     <tr>
         <td><?=Loc::getMessage("LEGACY_LOYALTY_BONUS_DELAY")?></td>
         <td><input type="number" name="bonus_delay" value="<?=htmlspecialcharsbx($bonusDelay)?>"></td>
+    </tr>
+    <tr class="heading">
+        <td colspan="2"><?= Loc::getMessage("LEGACY_LOYALTY_BONUS_ACCRUAL_HEADING") ?></td>
+    </tr>
+    <tr>
+        <td><?=Loc::getMessage("LEGACY_LOYALTY_BONUS_ACCRUAL_ORDER_STATUS")?></td>
+        <td>
+            <select name="bonus_accrual_order_status">
+                <?php foreach ($orderStatuses as $statusId => $statusName): ?>
+                    <option value="<?=htmlspecialcharsbx($statusId)?>" <?= $bonusAccrualOrderStatus === (string)$statusId ? 'selected' : '' ?>>
+                        <?=htmlspecialcharsbx($statusName)?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </td>
+    </tr>
+    <tr>
+        <td><?=Loc::getMessage("LEGACY_LOYALTY_BONUS_ACCRUAL_ON_PAID")?></td>
+        <td>
+            <input type="checkbox" name="bonus_accrual_on_paid" value="Y" <?= $bonusAccrualOnPaid === 'Y' ? 'checked' : '' ?>>
+        </td>
     </tr>
 
     <?php

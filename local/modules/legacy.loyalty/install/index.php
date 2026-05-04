@@ -61,6 +61,49 @@ Class legacy_loyalty extends CModule {
             'sale',
             'OnSaleOrderBeforeSaved',
             $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
+            'onSaleOrderBeforeSaved'
+        );
+        RegisterModuleDependences(
+            'sale',
+            'OnSaleOrderSaved',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
+            'onSaleOrderSaved'
+        );
+        RegisterModuleDependences(
+            'sale',
+            'OnSaleOrderPaid',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
+            'onSaleOrderPaid'
+        );
+        RegisterModuleDependences(
+            'sale',
+            'OnSaleStatusOrderChange',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
+            'onSaleStatusOrderChange'
+        );
+        RegisterModuleDependences(
+            'sale',
+            'OnSaleComponentOrderCreated',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
+            'onSaleComponentOrderCreated'
+        );
+        RegisterModuleDependences(
+            'sale',
+            'OnSaleComponentOrderResultPrepared',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
+            'onSaleComponentOrderResultPrepared'
+        );
+
+        RegisterModuleDependences(
+            'sale',
+            'OnSaleOrderBeforeSaved',
+            $this->MODULE_ID,
             '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
             'onSaleOrderBeforeSaved'
         );
@@ -113,6 +156,49 @@ Class legacy_loyalty extends CModule {
             'sale',
             'OnSaleOrderBeforeSaved',
             $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
+            'onSaleOrderBeforeSaved'
+        );
+        UnRegisterModuleDependences(
+            'sale',
+            'OnSaleOrderSaved',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
+            'onSaleOrderSaved'
+        );
+        UnRegisterModuleDependences(
+            'sale',
+            'OnSaleOrderPaid',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
+            'onSaleOrderPaid'
+        );
+        UnRegisterModuleDependences(
+            'sale',
+            'OnSaleStatusOrderChange',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
+            'onSaleStatusOrderChange'
+        );
+        UnRegisterModuleDependences(
+            'sale',
+            'OnSaleComponentOrderCreated',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
+            'onSaleComponentOrderCreated'
+        );
+        UnRegisterModuleDependences(
+            'sale',
+            'OnSaleComponentOrderResultPrepared',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
+            'onSaleComponentOrderResultPrepared'
+        );
+
+        UnRegisterModuleDependences(
+            'sale',
+            'OnSaleOrderBeforeSaved',
+            $this->MODULE_ID,
             '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
             'onSaleOrderBeforeSaved'
         );
@@ -156,6 +242,10 @@ Class legacy_loyalty extends CModule {
         $this->InstallDB();
         $this->InstallFiles();
 
+        if (Loader::includeModule('sale')) {
+            include(__DIR__ . '/include/order_props.php');
+        }
+
         ModuleManager::registerModule($this->MODULE_ID);
         $this->InstallEvents();
 
@@ -172,6 +262,10 @@ Class legacy_loyalty extends CModule {
         } elseif($request["step"]==2) {
             $this->UnInstallEvents();
             $this->UnInstallFiles();
+
+            if (Loader::includeModule('sale')) {
+                include(__DIR__ . '/include/del_order_props.php');
+            }
 
             if($request["savedata"] != "Y")
                 $this->UnInstallDB();

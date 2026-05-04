@@ -40,7 +40,7 @@ class BonusService {
         return self::AGENT_CLEANUP_EXPIRED;
     }
 
-    public static function addBonus($userId, $amount) {
+    public static function addBonus($userId, $amount, ?int $orderId = null) {
         if ($amount <= 0) return;
 
         $settings = self::getSettings();
@@ -85,9 +85,10 @@ class BonusService {
                 ");
             }
 
+            $historyOrderId = $orderId !== null ? (int)$orderId : 'NULL';
             $connection->queryExecute("
-                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE)
-                VALUES ({$userId}, 'add', {$amount}, 'system');
+                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, ORDER_ID, SOURCE)
+                VALUES ({$userId}, 'add', {$amount}, {$historyOrderId}, 'order');
             ");
 
             $connection->commitTransaction();
@@ -154,7 +155,7 @@ class BonusService {
         }
     }
 
-    public static function spendBonus($userId, $amount) {
+    public static function spendBonus($userId, $amount, ?int $orderId = null) {
         if ($amount <= 0) return;
 
         $connection = Application::getConnection();
@@ -204,9 +205,10 @@ class BonusService {
                 }
             }
 
+            $historyOrderId = $orderId !== null ? (int)$orderId : 'NULL';
             $connection->queryExecute("
-                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE)
-                VALUES ({$userId}, 'spend', {$amount}, 'system')
+                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, ORDER_ID, SOURCE)
+                VALUES ({$userId}, 'spend', {$amount}, {$historyOrderId}, 'order')
             ");
 
             $connection->commitTransaction();
@@ -302,5 +304,26 @@ class BonusService {
             'available' => (int)($available['TOTAL'] ?? 0),
             'pending' => (int)($pending['TOTAL'] ?? 0),
         ];
+    }
+
+    public static function hasOrderOperation(int $orderId, string $type): bool {
+        if ($orderId <= 0 || ($type !== 'add' && $type !== 'spend')) {
+            return false;
+        }
+
+        $connection = Application::getConnection();
+        $sqlHelper = $connection->getSqlHelper();
+        $typeSql = $sqlHelper->forSql($type);
+
+        $row = $connection->query("
+            SELECT ID
+            FROM b_legacy_loyalty_bonus_history
+            WHERE ORDER_ID = {$orderId}
+              AND TYPE = '{$typeSql}'
+            ORDER BY ID DESC
+            LIMIT 1
+        ")->fetch();
+
+        return !empty($row['ID']);
     }
 }

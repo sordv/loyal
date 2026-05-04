@@ -41,4 +41,12 @@ class ProgramService {
 
         return is_array($program) && ($program['ACTIVE'] ?? 'N') === 'Y';
     }
+
+    public static function getBonusAccrualOrderStatus(): string {
+        return trim((string)Option::get('legacy.loyalty', 'bonus_accrual_order_status', 'F'));
+    }
+
+    public static function isBonusAccrualOnPaidEnabled(): bool {
+        return Option::get('legacy.loyalty', 'bonus_accrual_on_paid', 'Y') === 'Y';
+    }
 }
