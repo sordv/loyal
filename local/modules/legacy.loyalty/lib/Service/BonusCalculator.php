@@ -4,7 +4,7 @@ namespace Legacy\Loyalty\Service;
 
 use Bitrix\Main\Loader;
 use Bitrix\Sale;
-use Legacy\Loyalty\RuleBuilder\BonusRuleTable;
+use Legacy\Loyalty\Tables\BonusRuleTable;
 
 class BonusCalculator {
     public static function calculate(string $type, $source = null, array $context = []): array {

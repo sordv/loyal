@@ -44,3 +44,5 @@ $MESS["LEGACY_LOYALTY_MAIL_BONUS_EXPIRE_DAYS_NOTE"] = "Через запятую
 // Общие для вкладок настройки
 $MESS["LEGACY_LOYALTY_SAVED"] = "Настройки сохранены";
 $MESS["LEGACY_LOYALTY_DELETED"] = "Правило удалено";
+$MESS["LEGACY_LOYALTY_BTN_SAVE_SETTINGS"] = "Сохранить";
+$MESS["LEGACY_LOYALTY_BTN_BACK"] = "Назад";

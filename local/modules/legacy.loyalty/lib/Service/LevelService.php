@@ -7,7 +7,7 @@ use Bitrix\Main\Loader;
 use Bitrix\Main\Type\DateTime;
 use Bitrix\Main\UserTable;
 use Bitrix\Sale\Order;
-use Legacy\Loyalty\RuleBuilder\LevelRuleTable;
+use Legacy\Loyalty\Tables\LevelRuleTable;
 
 class LevelService {
     public static function setLevel($userId, $levelId)
@@ -232,6 +232,55 @@ class LevelService {
         ];
     }
 
+    /**
+     * Завершённые заказы (как getCompletedOrdersStats) за предыдущий календарный месяц:
+     * [первый день прошлого месяца 00:00:00; первый день текущего месяца 00:00:00).
+     */
+    public static function getCompletedOrdersStatsPreviousMonth(int $userId): array {
+        if ($userId <= 0 || !Loader::includeModule('sale')) {
+            return ['count' => 0, 'sum' => 0.0];
+        }
+
+        $now = new DateTime();
+        $y = (int)$now->format('Y');
+        $m = (int)$now->format('m');
+        if ($m === 1) {
+            $prevY = $y - 1;
+            $prevM = 12;
+        } else {
+            $prevY = $y;
+            $prevM = $m - 1;
+        }
+        $prevMonthStart = DateTime::createFromPhp(
+            new \DateTime(sprintf('%04d-%02d-01 00:00:00', $prevY, $prevM))
+        );
+        $currentMonthStart = DateTime::createFromPhp(
+            new \DateTime(sprintf('%04d-%02d-01 00:00:00', $y, $m))
+        );
+
+        $filter = [
+            '=USER_ID' => $userId,
+            '=STATUS_ID' => 'F',
+            '=CANCELED' => 'N',
+            '>=DATE_INSERT' => $prevMonthStart,
+            '<DATE_INSERT' => $currentMonthStart,
+        ];
+
+        $row = Order::getList([
+            'filter' => $filter,
+            'select' => ['CNT', 'SUM_PRICE'],
+            'runtime' => [
+                new \Bitrix\Main\Entity\ExpressionField('CNT', 'COUNT(*)'),
+                new \Bitrix\Main\Entity\ExpressionField('SUM_PRICE', 'SUM(%s)', ['PRICE']),
+            ],
+        ])->fetch();
+
+        return [
+            'count' => (int)($row['CNT'] ?? 0),
+            'sum' => (float)($row['SUM_PRICE'] ?? 0),
+        ];
+    }
+
     public static function findBestMatchingLevelRuleId(int $userId): ?int {
         if ($userId <= 0 || !Loader::includeModule('sale')) {
             return null;
@@ -407,6 +456,16 @@ class LevelService {
 
                 return self::compareNumber($stats['count'], (float)($values['value'] ?? 0), $logic);
 
+            case 'ordersCountPrevMonth':
+                $stats = self::getCompletedOrdersStatsPreviousMonth($userId);
+
+                return self::compareNumber($stats['count'], (float)($values['value'] ?? 0), $logic);
+
+            case 'ordersSumPrevMonth':
+                $stats = self::getCompletedOrdersStatsPreviousMonth($userId);
+
+                return self::compareNumber($stats['sum'], (float)($values['value'] ?? 0), $logic);
+
             case 'registrationAge':
                 $ageDays = self::getUserRegistrationAgeDays($userId);
                 if ($ageDays === null) {
@@ -428,8 +487,14 @@ class LevelService {
                 if ($condTs === null) {
                     return false;
                 }
+                // Сравнение по календарной дате (полночь дня регистрации и полночь выбранной даты).
+                $userDayStart = strtotime(date('Y-m-d', $userTs) . ' 00:00:00');
+                $condDayStart = strtotime(date('Y-m-d', $condTs) . ' 00:00:00');
+                if ($userDayStart === false || $condDayStart === false) {
+                    return false;
+                }
 
-                return self::compareNumber($userTs, (float)$condTs, $logic);
+                return self::compareNumber((float)$userDayStart, (float)$condDayStart, $logic);
         }
 
         return false;

@@ -5,6 +5,44 @@ use Bitrix\Main\Web\Json;
 
 class User
 {
+    /** Плейсхолдер поля даты (см. legacy.loyalty.condtree.calendar.js). */
+    public static function getRegistrationDatePlaceholder(): string {
+        return 'Выберите дату регистрации';
+    }
+
+    /**
+     * В дереве условий: ISO из БД → d.m.Y для отображения в поле.
+     *
+     * @param mixed $tree
+     * @return mixed
+     */
+    public static function prepareConditionsForEditor($tree) {
+        if (!is_array($tree)) {
+            return $tree;
+        }
+
+        if (($tree['controlId'] ?? '') === 'registrationDate' && isset($tree['values']['value'])) {
+            $v = $tree['values']['value'];
+            if (is_string($v) && $v !== '') {
+                $trimmed = trim($v);
+                if (preg_match('/^\d{4}-\d{2}-\d{2}/', $trimmed)) {
+                    $ts = strtotime($trimmed);
+                    if ($ts !== false) {
+                        $tree['values']['value'] = date('d.m.Y', $ts);
+                    }
+                }
+            }
+        }
+
+        if (!empty($tree['children']) && is_array($tree['children'])) {
+            foreach ($tree['children'] as $key => $child) {
+                $tree['children'][$key] = self::prepareConditionsForEditor($child);
+            }
+        }
+
+        return $tree;
+    }
+
     public static function mainParams(string $mode = ''): array|string
     {
         $params = [
@@ -244,6 +282,70 @@ class User
                         ['id' => 'period_suffix', 'type' => 'prefix', 'text' => 'дней'],
                     ],
                 ],
+                // СУММА ЗАКАЗОВ ЗА ПРОШЛЫЙ МЕСЯЦ
+                [
+                    'controlId' => 'ordersSumPrevMonth',
+                    'group' => false,
+                    'label' => 'Сумма заказов за прошлый месяц',
+                    'showIn' => ['CondGroup'],
+                    'control' => [
+                        ['id' => 'prefix', 'type' => 'prefix', 'text' => 'Сумма заказов за прошлый месяц'],
+                        [
+                            'id' => 'logic',
+                            'name' => 'logic',
+                            'type' => 'select',
+                            'values' => [
+                                'Equal' => 'равно',
+                                'Not' => 'не равно',
+                                'Greater' => 'больше',
+                                'Less' => 'меньше',
+                                'GreaterEqual' => 'больше или равно',
+                                'LessEqual' => 'меньше или равно',
+                            ],
+                            'defaultText' => 'равно',
+                            'defaultValue' => 'Equal',
+                        ],
+                        [
+                            'type' => 'input',
+                            'id' => 'value',
+                            'name' => 'value',
+                            'show_value' => 'Y',
+                            'defaultValue' => '0',
+                        ],
+                    ],
+                ],
+                // КОЛИЧЕСТВО ЗАКАЗОВ ЗА ПРОШЛЫЙ МЕСЯЦ
+                [
+                    'controlId' => 'ordersCountPrevMonth',
+                    'group' => false,
+                    'label' => 'Количество заказов за прошлый месяц',
+                    'showIn' => ['CondGroup'],
+                    'control' => [
+                        ['id' => 'prefix', 'type' => 'prefix', 'text' => 'Количество заказов за прошлый месяц'],
+                        [
+                            'id' => 'logic',
+                            'name' => 'logic',
+                            'type' => 'select',
+                            'values' => [
+                                'Equal' => 'равно',
+                                'Not' => 'не равно',
+                                'Greater' => 'больше',
+                                'Less' => 'меньше',
+                                'GreaterEqual' => 'больше или равно',
+                                'LessEqual' => 'меньше или равно',
+                            ],
+                            'defaultText' => 'равно',
+                            'defaultValue' => 'Equal',
+                        ],
+                        [
+                            'type' => 'input',
+                            'id' => 'value',
+                            'name' => 'value',
+                            'show_value' => 'Y',
+                            'defaultValue' => '0',
+                        ],
+                    ],
+                ],
                 // ВОЗРАСТ АККАУНТА
                 [
                     'controlId' => 'registrationAge',
@@ -277,7 +379,7 @@ class User
                         ['id' => 'suffix', 'type' => 'prefix', 'text' => 'дней'],
                     ],
                 ],
-                // ДАТА РЕГИСТРАЦИИ
+                // ДАТА РЕГИСТРАЦИИ (логика как у числовых: = != > < >= <=; ввод — BX.calendar, см. install/js/.../condtree.calendar)
                 [
                     'controlId' => 'registrationDate',
                     'group' => false,
@@ -301,12 +403,14 @@ class User
                             'defaultValue' => 'Equal',
                         ],
                         [
-                            'type' => 'calendar',
+                            'type' => 'input',
                             'id' => 'value',
                             'name' => 'value',
                             'show_value' => 'Y',
-                            'defaultText' => 'Выберите дату',
+                            'defaultText' => self::getRegistrationDatePlaceholder(),
+                            'placeholder' => self::getRegistrationDatePlaceholder(),
                             'defaultValue' => '',
+                            'className' => 'leglol-condtree-regdate',
                         ],
                     ],
                 ],

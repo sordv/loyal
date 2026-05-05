@@ -12,4 +12,6 @@ $MESS["LEGACY_LOYALTY_TAB_SETTINGS"] = "Общие настройки";
 
 
 // Общие для вкладок настройки
+$MESS["LEGACY_LOYALTY_BTN_SAVE_SETTINGS"] = "Сохранить";
+$MESS["LEGACY_LOYALTY_BTN_BACK"] = "Назад";
 

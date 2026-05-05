@@ -80,11 +80,11 @@ class Conditions {
                         }
                     }
 
-                    if (in_array($block['controlId'], ['orderSum', 'cartSum', 'productPrice', 'ordersSum', 'ordersSumPeriod'], true)) {
+                    if (in_array($block['controlId'], ['orderSum', 'cartSum', 'productPrice', 'ordersSum', 'ordersSumPeriod', 'ordersSumPrevMonth'], true)) {
                         $v = (string)(float)str_replace(',', '.', (string)$v);
                     }
 
-                    if (in_array($block['controlId'], ['registrationAge', 'ordersCount', 'ordersCountPeriod', 'everyNthOrder', 'onlyNthOrder', 'itemCount'], true)) {
+                    if (in_array($block['controlId'], ['registrationAge', 'ordersCount', 'ordersCountPeriod', 'ordersCountPrevMonth', 'everyNthOrder', 'onlyNthOrder', 'itemCount'], true)) {
                         $v = (string)(int)$v;
                     }
 

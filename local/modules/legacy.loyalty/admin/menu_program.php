@@ -4,6 +4,7 @@ use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Application;
 use Bitrix\Main\Loader;
 use Legacy\Loyalty\Tables\ProgramTable;
+use Legacy\Loyalty\Service\LevelBulkSyncService;
 
 require_once($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_before.php");
 
@@ -35,9 +36,15 @@ if (check_bitrix_sessid()) {
                     'ACTIVE' => $newStatus
                 ]);
 
+                $messageText = ($newStatus === 'Y') ? 'Программа включена' : 'Программа выключена';
+                if ($newStatus === 'Y' && ($program['TYPE'] ?? '') === 'level') {
+                    LevelBulkSyncService::syncAllRegisteredUsers();
+                    $messageText = 'Программа включена. Уровни пересчитаны для всех зарегистрированных пользователей.';
+                }
+
                 $message = [
                     "TYPE" => "OK",
-                    "MESSAGE" => ($newStatus === 'Y') ? "Программа включена" : "Программа выключена"
+                    "MESSAGE" => $messageText
                 ];
             }
         }

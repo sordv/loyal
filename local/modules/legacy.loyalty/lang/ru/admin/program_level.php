@@ -27,3 +27,5 @@ $MESS["LEGACY_LOYALTY_MAIL_LEVEL_CHANGE"] = "Изменение уровня п�
 // Общие для вкладок настройки
 $MESS["LEGACY_LOYALTY_SAVED"] = "Настройки сохранены";
 $MESS["LEGACY_LOYALTY_DELETED"] = "Уровень удален";
+$MESS["LEGACY_LOYALTY_BTN_SAVE_SETTINGS"] = "Сохранить";
+$MESS["LEGACY_LOYALTY_BTN_BACK"] = "Назад";

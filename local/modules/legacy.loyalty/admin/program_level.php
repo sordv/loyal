@@ -40,7 +40,7 @@ if ($request->get('deleted') === 'Y') {
 
 if ($request->isPost() && check_bitrix_sessid() && $request->getPost('save_settings')) {
     Option::set('legacy.loyalty', 'mail_level_change', $request->getPost('mail_level_change') === 'Y' ? 'Y' : 'N');
-    $message = ["TYPE" => "OK", "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_SAVED")];
+    LocalRedirect('menu_program.php?lang=' . LANG);
 }
 
 $mailLevelChange = Option::get('legacy.loyalty', 'mail_level_change', 'N');
@@ -150,18 +150,20 @@ function renderLevelRuleCard($rule, $APPLICATION) {
         </td>
     </tr>
 
+    <tr>
+        <td colspan="2" class="leglol-settings-actions">
+            <input type="hidden" name="save_settings" value="Y">
+            <input type="submit" name="save" value="<?= htmlspecialcharsbx(Loc::getMessage('LEGACY_LOYALTY_BTN_SAVE_SETTINGS')) ?>" class="adm-btn-save">
+        </td>
+    </tr>
+
     <?php
     $tabControl->EndTab();
-
-    $tabControl->Buttons([
-        "btnSave" => true,
-        "btnApply" => true,
-        "btnCancel" => true,
-        "back_url" => "menu_program.php"
-    ]);
-    echo '<input type="hidden" name="save_settings" value="Y">';
     $tabControl->End();
     ?>
+    <div class="leglol-program-footer-nav">
+        <a class="adm-btn" href="menu_program.php?lang=<?= LANG ?>"><?= htmlspecialcharsbx(Loc::getMessage('LEGACY_LOYALTY_BTN_BACK')) ?></a>
+    </div>
 </form>
 
 <style>
@@ -213,6 +215,16 @@ function renderLevelRuleCard($rule, $APPLICATION) {
         border: 1px dashed #ccc;
         border-radius: 4px;
         color: #666;
+    }
+
+    .leglol-settings-actions {
+        padding-top: 16px;
+    }
+
+    .leglol-program-footer-nav {
+        margin-top: 16px;
+        padding-top: 12px;
+        border-top: 1px solid #e0e0e0;
     }
 </style>
 

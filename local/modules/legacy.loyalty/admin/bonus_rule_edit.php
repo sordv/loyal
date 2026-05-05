@@ -89,9 +89,14 @@ if ($request->isPost() && check_bitrix_sessid()) {
             $redirectParams .= "&cond_error=1";
         }
 
+        $savedBonusTabDiv = (($arFields['TYPE'] ?? '') === 'spend') ? 'rules_spend' : 'rules_add';
+        $programBonusUrl = "program_bonus.php?lang=" . LANG
+            . "&tabControl_active_tab=" . $savedBonusTabDiv
+            . ($parseErrorOrder || $parseErrorProduct ? "&cond_error=1" : "");
+
         LocalRedirect($request->getPost("apply")
             ? "bonus_rule_edit.php?ID=" . $ID . $redirectParams
-            : "program_bonus.php?lang=" . LANG . ($parseErrorOrder || $parseErrorProduct ? "&cond_error=1" : "")
+            : $programBonusUrl
         );
     } else {
         $message = [
@@ -120,6 +125,9 @@ foreach (['CONDITIONS_ORDER', 'CONDITIONS_PRODUCT'] as $field) {
         }
     }
 }
+
+$bonusListTabDiv = (($arRule['TYPE'] ?? 'add') === 'spend') ? 'rules_spend' : 'rules_add';
+$programBonusBackUrl = 'program_bonus.php?lang=' . LANG . '&tabControl_active_tab=' . $bonusListTabDiv;
 
 ?>
 
@@ -245,7 +253,7 @@ foreach (['CONDITIONS_ORDER', 'CONDITIONS_PRODUCT'] as $field) {
     <?php
     $tabControl->Buttons([
         "btnSave" => true, "btnApply" => true, "btnCancel" => true,
-        "back_url" => "program_bonus.php?lang=" . LANG
+        "back_url" => $programBonusBackUrl
     ]);
     $tabControl->End();
     ?>

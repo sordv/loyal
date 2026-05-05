@@ -150,6 +150,10 @@ if (!is_array($arRule['PRIVILEGES'])) {
 }
 $arRule['PRIVILEGES'] = normalizeLevelPrivileges($arRule['PRIVILEGES']);
 
+if (!empty($arRule['CONDITIONS']) && is_array($arRule['CONDITIONS'])) {
+    $arRule['CONDITIONS'] = UserConditions::prepareConditionsForEditor($arRule['CONDITIONS']);
+}
+
 if (!defined('BT_COND_MODE_DEFAULT')) define('BT_COND_MODE_DEFAULT', 0);
 if (!defined('BT_COND_BUILD_USER')) define('BT_COND_BUILD_USER', 'user');
 ?>
@@ -196,20 +200,135 @@ if (!defined('BT_COND_BUILD_USER')) define('BT_COND_BUILD_USER', 'user');
     <tr>
         <td colspan="2">
             <?php
-            CJSCore::Init(['core_condtree', 'core_userselector', 'core_date']);
+            CJSCore::Init(['core_condtree', 'core_userselector', 'core_date', 'popup', 'calendar']);
             $userTree = !empty($arRule['CONDITIONS'])
                 ? \Bitrix\Main\Web\Json::encode($arRule['CONDITIONS'])
                 : UserConditions::baseConditions('json');
+            $regDateMarker = 'Дата регистрации';
             ?>
             <div id="UserConditions" class="leglol-condition-builder"></div>
             <script>
-                BX.ready(function () {
-                    new BX.TreeConditions(
-                        <?=UserConditions::mainParams('json')?>,
-                        <?=$userTree?>,
-                        <?=UserConditions::controls('json')?>
-                    );
-                });
+                (function () {
+                    window.legacyLoyaltyCondTree = window.legacyLoyaltyCondTree || {};
+                    window.legacyLoyaltyCondTree.regDatePlaceholder = <?= \Bitrix\Main\Web\Json::encode(UserConditions::getRegistrationDatePlaceholder()) ?>;
+                    window.legacyLoyaltyCondTree.regDateMarker = <?= \Bitrix\Main\Web\Json::encode($regDateMarker) ?>;
+
+                    function ensureCalendarApi(done) {
+                        if (typeof BX !== 'undefined' && typeof BX.calendar === 'function') {
+                            done();
+                            return;
+                        }
+                        if (BX.Runtime && typeof BX.Runtime.loadExtension === 'function') {
+                            BX.Runtime.loadExtension('calendar').then(done).catch(done);
+                            return;
+                        }
+                        if (BX.loadExt) {
+                            BX.loadExt('calendar').then(done).catch(done);
+                            return;
+                        }
+                        setTimeout(function () { ensureCalendarApi(done); }, 50);
+                    }
+
+                    function findRegDateValueInputs(root, marker) {
+                        var out = [];
+                        if (!root || !marker) {
+                            return out;
+                        }
+                        var list = root.querySelectorAll('input[type="text"], input:not([type])');
+                        for (var i = 0; i < list.length; i++) {
+                            var inp = list[i];
+                            var name = inp.name || '';
+                            if (name.indexOf('value') === -1) {
+                                continue;
+                            }
+                            var scope = inp.closest('.sale-cond-control-cont')
+                                || inp.closest('.sale-cond-tree-view-control-wrap')
+                                || inp.closest('.sale-cond-tree-view-item')
+                                || inp.closest('tr')
+                                || inp.parentElement;
+                            if (!scope || scope === root) {
+                                continue;
+                            }
+                            var blob = scope.textContent || '';
+                            if (blob.indexOf(marker) === -1) {
+                                continue;
+                            }
+                            out.push(inp);
+                        }
+                        return out;
+                    }
+
+                    function bindOne(inp) {
+                        if (!inp || inp.__legacyLoyaltyCalBound) {
+                            return;
+                        }
+                        inp.__legacyLoyaltyCalBound = true;
+                        inp.setAttribute('readonly', 'readonly');
+                        inp.setAttribute('autocomplete', 'off');
+                        inp.style.cursor = 'pointer';
+                        inp.classList.add('leglol-condtree-regdate');
+                        BX.bind(inp, 'click', function (e) {
+                            e.preventDefault();
+                            ensureCalendarApi(function () {
+                                if (typeof BX.calendar !== 'function') {
+                                    return;
+                                }
+                                BX.calendar({
+                                    node: inp,
+                                    field: inp,
+                                    bTime: false,
+                                    callback_after: function () {
+                                        if (typeof BX.fireEvent === 'function') {
+                                            BX.fireEvent(inp, 'change');
+                                        }
+                                    }
+                                });
+                            });
+                        });
+                    }
+
+                    function bindAll(rootEl) {
+                        var root = rootEl || BX('UserConditions');
+                        if (!root) {
+                            return;
+                        }
+                        var marker = window.legacyLoyaltyCondTree.regDateMarker || 'Дата регистрации';
+                        var inputs = findRegDateValueInputs(root, marker);
+                        for (var j = 0; j < inputs.length; j++) {
+                            bindOne(inputs[j]);
+                        }
+                    }
+
+                    window.LegacyLoyaltyCondTreeCalendar = window.LegacyLoyaltyCondTreeCalendar || {};
+                    window.LegacyLoyaltyCondTreeCalendar.init = function (containerId) {
+                        ensureCalendarApi(function () {
+                            var el = BX(containerId);
+                            if (!el) {
+                                return;
+                            }
+                            bindAll(el);
+                            if (!el.__legacyLoyaltyCalObs && typeof MutationObserver !== 'undefined') {
+                                var obs = new MutationObserver(function () {
+                                    bindAll(el);
+                                });
+                                obs.observe(el, {childList: true, subtree: true});
+                                el.__legacyLoyaltyCalObs = obs;
+                            }
+                            setTimeout(function () { bindAll(el); }, 0);
+                            setTimeout(function () { bindAll(el); }, 250);
+                            setTimeout(function () { bindAll(el); }, 700);
+                        });
+                    };
+
+                    BX.ready(function () {
+                        new BX.TreeConditions(
+                            <?=UserConditions::mainParams('json')?>,
+                            <?=$userTree?>,
+                            <?=UserConditions::controls('json')?>
+                        );
+                        window.LegacyLoyaltyCondTreeCalendar.init('UserConditions');
+                    });
+                })();
             </script>
         </td>
     </tr>
@@ -262,8 +381,13 @@ if (!defined('BT_COND_BUILD_USER')) define('BT_COND_BUILD_USER', 'user');
 
     .leglol-condition-builder {
         position: relative;
-        z-index: 1;
+        z-index: 10;
         min-height: 100px;
+    }
+
+    .leglol-condtree-regdate {
+        cursor: pointer;
+        max-width: 220px;
     }
 </style>
 
