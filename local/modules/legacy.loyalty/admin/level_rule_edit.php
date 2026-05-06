@@ -60,17 +60,50 @@ if (!function_exists('normalizeLevelPrivileges')) {
 // ошибка парсинга если с редиректа
 $condError = $request->get('cond_error');
 if ($condError === '1' || (int)$condError === 1) {
-    $message = new CAdminMessage([
+    $message = [
         "MESSAGE" => Loc::getMessage("LEGACY_LOYALTY_LEVEL_COND_PARSE_ERROR"),
         "TYPE" => "WARNING",
-        "DETAILS" => Loc::getMessage("LEGACY_LOYALTY_LEVEL_COND_PARSE_ERROR_DETAILS")
-    ]);
+        "DETAILS" => Loc::getMessage("LEGACY_LOYALTY_LEVEL_COND_PARSE_ERROR_DETAILS"),
+    ];
 }
 
 if ($request->isPost() && check_bitrix_sessid()) {
     $conditionsToSave = [];
     $parseError = null;
     $raw = $request->getPost('levelRuleCond');
+
+    // Валидация: дата регистрации должна быть в формате ДД.ММ.ГГГГ (если заполнена).
+    if (is_array($raw)) {
+        foreach ($raw as $cond) {
+            if (!is_array($cond)) {
+                continue;
+            }
+            if (($cond['controlId'] ?? null) !== 'registrationDate') {
+                continue;
+            }
+            $value = trim((string)($cond['value'] ?? ''));
+            if ($value === '') {
+                continue;
+            }
+
+            $ts = MakeTimeStamp($value, 'DD.MM.YYYY');
+            // строго: не даём сохранять "мусор" вроде 43.13.2026
+            if ($ts === false) {
+                $message = [
+                    "MESSAGE" => "Некорректная дата в условии «Дата регистрации».",
+                    "TYPE" => "ERROR",
+                    "DETAILS" => "Введите дату в формате ДД.ММ.ГГГГ, например 31.12.2025.",
+                ];
+                // Прерываем сохранение
+                $raw = null;
+                break;
+            }
+        }
+    }
+
+    if (!is_array($raw)) {
+        // invalid date or no conditions posted; don't proceed with saving
+    } else {
     $conditionsToSave = is_array($raw)
         ? LoyaltyConditions::saveConditions($raw)
         : ($arRule['CONDITIONS'] ?? []);
@@ -120,13 +153,20 @@ if ($request->isPost() && check_bitrix_sessid()) {
                 "TYPE" => "ERROR"
         ];
     }
+    }
 }
 
 $APPLICATION->SetTitle($ID > 0 ? Loc::getMessage("LEGACY_LOYALTY_LEVEL_EDIT_RULE") : Loc::getMessage("LEGACY_LOYALTY_LEVEL_ADD_RULE")
 );
 require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_after.php");
 
-if ($message) CAdminMessage::ShowMessage($message);
+if ($message) {
+    if ($message instanceof CAdminMessage) {
+        $message->Show();
+    } else {
+        CAdminMessage::ShowMessage($message);
+    }
+}
 
 $aTabs = [
     ["DIV" => "edit_rule", "TAB" => Loc::getMessage("LEGACY_LOYALTY_LEVEL_RULE_TAB"), "TITLE" => Loc::getMessage("LEGACY_LOYALTY_LEVEL_RULE_TAB")],
@@ -209,124 +249,12 @@ if (!defined('BT_COND_BUILD_USER')) define('BT_COND_BUILD_USER', 'user');
             <div id="UserConditions" class="leglol-condition-builder"></div>
             <script>
                 (function () {
-                    window.legacyLoyaltyCondTree = window.legacyLoyaltyCondTree || {};
-                    window.legacyLoyaltyCondTree.regDatePlaceholder = <?= \Bitrix\Main\Web\Json::encode(UserConditions::getRegistrationDatePlaceholder()) ?>;
-                    window.legacyLoyaltyCondTree.regDateMarker = <?= \Bitrix\Main\Web\Json::encode($regDateMarker) ?>;
-
-                    function ensureCalendarApi(done) {
-                        if (typeof BX !== 'undefined' && typeof BX.calendar === 'function') {
-                            done();
-                            return;
-                        }
-                        if (BX.Runtime && typeof BX.Runtime.loadExtension === 'function') {
-                            BX.Runtime.loadExtension('calendar').then(done).catch(done);
-                            return;
-                        }
-                        if (BX.loadExt) {
-                            BX.loadExt('calendar').then(done).catch(done);
-                            return;
-                        }
-                        setTimeout(function () { ensureCalendarApi(done); }, 50);
-                    }
-
-                    function findRegDateValueInputs(root, marker) {
-                        var out = [];
-                        if (!root || !marker) {
-                            return out;
-                        }
-                        var list = root.querySelectorAll('input[type="text"], input:not([type])');
-                        for (var i = 0; i < list.length; i++) {
-                            var inp = list[i];
-                            var name = inp.name || '';
-                            if (name.indexOf('value') === -1) {
-                                continue;
-                            }
-                            var scope = inp.closest('.sale-cond-control-cont')
-                                || inp.closest('.sale-cond-tree-view-control-wrap')
-                                || inp.closest('.sale-cond-tree-view-item')
-                                || inp.closest('tr')
-                                || inp.parentElement;
-                            if (!scope || scope === root) {
-                                continue;
-                            }
-                            var blob = scope.textContent || '';
-                            if (blob.indexOf(marker) === -1) {
-                                continue;
-                            }
-                            out.push(inp);
-                        }
-                        return out;
-                    }
-
-                    function bindOne(inp) {
-                        if (!inp || inp.__legacyLoyaltyCalBound) {
-                            return;
-                        }
-                        inp.__legacyLoyaltyCalBound = true;
-                        inp.setAttribute('readonly', 'readonly');
-                        inp.setAttribute('autocomplete', 'off');
-                        inp.style.cursor = 'pointer';
-                        inp.classList.add('leglol-condtree-regdate');
-                        BX.bind(inp, 'click', function (e) {
-                            e.preventDefault();
-                            ensureCalendarApi(function () {
-                                if (typeof BX.calendar !== 'function') {
-                                    return;
-                                }
-                                BX.calendar({
-                                    node: inp,
-                                    field: inp,
-                                    bTime: false,
-                                    callback_after: function () {
-                                        if (typeof BX.fireEvent === 'function') {
-                                            BX.fireEvent(inp, 'change');
-                                        }
-                                    }
-                                });
-                            });
-                        });
-                    }
-
-                    function bindAll(rootEl) {
-                        var root = rootEl || BX('UserConditions');
-                        if (!root) {
-                            return;
-                        }
-                        var marker = window.legacyLoyaltyCondTree.regDateMarker || 'Дата регистрации';
-                        var inputs = findRegDateValueInputs(root, marker);
-                        for (var j = 0; j < inputs.length; j++) {
-                            bindOne(inputs[j]);
-                        }
-                    }
-
-                    window.LegacyLoyaltyCondTreeCalendar = window.LegacyLoyaltyCondTreeCalendar || {};
-                    window.LegacyLoyaltyCondTreeCalendar.init = function (containerId) {
-                        ensureCalendarApi(function () {
-                            var el = BX(containerId);
-                            if (!el) {
-                                return;
-                            }
-                            bindAll(el);
-                            if (!el.__legacyLoyaltyCalObs && typeof MutationObserver !== 'undefined') {
-                                var obs = new MutationObserver(function () {
-                                    bindAll(el);
-                                });
-                                obs.observe(el, {childList: true, subtree: true});
-                                el.__legacyLoyaltyCalObs = obs;
-                            }
-                            setTimeout(function () { bindAll(el); }, 0);
-                            setTimeout(function () { bindAll(el); }, 250);
-                            setTimeout(function () { bindAll(el); }, 700);
-                        });
-                    };
-
                     BX.ready(function () {
                         new BX.TreeConditions(
                             <?=UserConditions::mainParams('json')?>,
                             <?=$userTree?>,
                             <?=UserConditions::controls('json')?>
                         );
-                        window.LegacyLoyaltyCondTreeCalendar.init('UserConditions');
                     });
                 })();
             </script>

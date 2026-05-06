@@ -7,7 +7,7 @@ class User
 {
     /** Плейсхолдер поля даты (см. legacy.loyalty.condtree.calendar.js). */
     public static function getRegistrationDatePlaceholder(): string {
-        return 'Выберите дату регистрации';
+        return 'ДД.ММ.ГГГГ (например 31.12.2025)';
     }
 
     /**
@@ -379,7 +379,7 @@ class User
                         ['id' => 'suffix', 'type' => 'prefix', 'text' => 'дней'],
                     ],
                 ],
-                // ДАТА РЕГИСТРАЦИИ (логика как у числовых: = != > < >= <=; ввод — BX.calendar, см. install/js/.../condtree.calendar)
+                // ДАТА РЕГИСТРАЦИИ
                 [
                     'controlId' => 'registrationDate',
                     'group' => false,
@@ -410,7 +410,6 @@ class User
                             'defaultText' => self::getRegistrationDatePlaceholder(),
                             'placeholder' => self::getRegistrationDatePlaceholder(),
                             'defaultValue' => '',
-                            'className' => 'leglol-condtree-regdate',
                         ],
                     ],
                 ],

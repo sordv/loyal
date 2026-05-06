@@ -46,6 +46,14 @@ class ProgramService {
         return trim((string)Option::get('legacy.loyalty', 'bonus_accrual_order_status', 'F'));
     }
 
+    /**
+     * Статус заказа, который считаем "выполненным" для уровней (по умолчанию F).
+     * Важно, потому что в магазинах часто меняют коды статусов, но название остаётся "Выполнен".
+     */
+    public static function getLevelCompleteOrderStatus(): string {
+        return trim((string)Option::get('legacy.loyalty', 'level_complete_order_status', 'F'));
+    }
+
     public static function isBonusAccrualOnPaidEnabled(): bool {
         return Option::get('legacy.loyalty', 'bonus_accrual_on_paid', 'Y') === 'Y';
     }

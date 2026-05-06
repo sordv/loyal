@@ -58,6 +58,21 @@ Class legacy_loyalty extends CModule {
 
     function InstallEvents() {
         RegisterModuleDependences(
+            'main',
+            'OnAfterUserRegister',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\UserLevelHandler',
+            'onAfterUserRegister'
+        );
+        RegisterModuleDependences(
+            'main',
+            'OnAfterUserAdd',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\UserLevelHandler',
+            'onAfterUserAdd'
+        );
+
+        RegisterModuleDependences(
             'sale',
             'OnSaleOrderBeforeSaved',
             $this->MODULE_ID,
@@ -154,6 +169,21 @@ Class legacy_loyalty extends CModule {
     }
 
     function UnInstallEvents() {
+        UnRegisterModuleDependences(
+            'main',
+            'OnAfterUserRegister',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\UserLevelHandler',
+            'onAfterUserRegister'
+        );
+        UnRegisterModuleDependences(
+            'main',
+            'OnAfterUserAdd',
+            $this->MODULE_ID,
+            '\Legacy\Loyalty\EventHandler\UserLevelHandler',
+            'onAfterUserAdd'
+        );
+
         UnRegisterModuleDependences(
             'sale',
             'OnSaleOrderBeforeSaved',

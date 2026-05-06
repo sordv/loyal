@@ -207,9 +207,14 @@ class LevelService {
             return ['count' => 0, 'sum' => 0.0];
         }
 
+        $completeStatus = ProgramService::getLevelCompleteOrderStatus();
+        if ($completeStatus === '') {
+            $completeStatus = 'F';
+        }
+
         $filter = [
             '=USER_ID' => $userId,
-            '=STATUS_ID' => 'F',
+            '=STATUS_ID' => $completeStatus,
             '=CANCELED' => 'N',
         ];
 
@@ -241,6 +246,11 @@ class LevelService {
             return ['count' => 0, 'sum' => 0.0];
         }
 
+        $completeStatus = ProgramService::getLevelCompleteOrderStatus();
+        if ($completeStatus === '') {
+            $completeStatus = 'F';
+        }
+
         $now = new DateTime();
         $y = (int)$now->format('Y');
         $m = (int)$now->format('m');
@@ -260,7 +270,7 @@ class LevelService {
 
         $filter = [
             '=USER_ID' => $userId,
-            '=STATUS_ID' => 'F',
+            '=STATUS_ID' => $completeStatus,
             '=CANCELED' => 'N',
             '>=DATE_INSERT' => $prevMonthStart,
             '<DATE_INSERT' => $currentMonthStart,

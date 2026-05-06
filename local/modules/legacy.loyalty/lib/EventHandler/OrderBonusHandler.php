@@ -57,9 +57,27 @@ class OrderBonusHandler {
     public static function onSaleOrderSaved($event): void {
         self::safeRun(static function () use ($event) {
             $order = self::extractOrder($event);
-            if (!$order || !ProgramService::isBonusEnabled()) {
+            if (!$order) {
                 return;
             }
+
+            // Пересчёт уровня пользователя после сохранения заказа.
+            // Делаем именно тут (после save), чтобы подсчёт выполненных заказов видел актуальный STATUS_ID.
+            if (ProgramService::isLevelEnabled()) {
+                $userId = (int)$order->getUserId();
+                $completeStatus = ProgramService::getLevelCompleteOrderStatus();
+                if ($completeStatus === '') {
+                    $completeStatus = 'F';
+                }
+                if ($userId > 0 && (string)$order->getField('STATUS_ID') === $completeStatus && (string)$order->getField('CANCELED') !== 'Y') {
+                    LevelService::syncUserLevelFromRules($userId);
+                }
+            }
+
+            if (!ProgramService::isBonusEnabled()) {
+                return;
+            }
+
             self::processBySettings($order);
         }, __METHOD__);
     }
@@ -83,7 +101,11 @@ class OrderBonusHandler {
     public static function onSaleStatusOrderChange($event): void {
         self::safeRun(static function () use ($event) {
             $order = self::extractOrder($event);
-            if (!$order || !ProgramService::isBonusEnabled()) {
+            if (!$order) {
+                return;
+            }
+
+            if (!ProgramService::isBonusEnabled()) {
                 return;
             }
 
