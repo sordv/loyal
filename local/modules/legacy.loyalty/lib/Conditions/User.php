@@ -3,19 +3,7 @@ namespace Legacy\Loyalty\Conditions;
 
 use Bitrix\Main\Web\Json;
 
-class User
-{
-    /** Плейсхолдер поля даты (см. legacy.loyalty.condtree.calendar.js). */
-    public static function getRegistrationDatePlaceholder(): string {
-        return 'ДД.ММ.ГГГГ (например 31.12.2025)';
-    }
-
-    /**
-     * В дереве условий: ISO из БД → d.m.Y для отображения в поле.
-     *
-     * @param mixed $tree
-     * @return mixed
-     */
+class User {
     public static function prepareConditionsForEditor($tree) {
         if (!is_array($tree)) {
             return $tree;
@@ -407,8 +395,8 @@ class User
                             'id' => 'value',
                             'name' => 'value',
                             'show_value' => 'Y',
-                            'defaultText' => self::getRegistrationDatePlaceholder(),
-                            'placeholder' => self::getRegistrationDatePlaceholder(),
+                            'defaultText' => 'ДД.ММ.ГГГГ (например 31.12.2025)',
+                            'placeholder' => 'ДД.ММ.ГГГГ (например 31.12.2025)',
                             'defaultValue' => '',
                         ],
                     ],
@@ -417,42 +405,5 @@ class User
         ];
 
         return $mode === 'json' ? Json::encode($params) : $params;
-    }
-
-    private static function getUserGroups(): array {
-        $out = [];
-        $db = \CGroup::GetList('c_sort', 'asc', ['ACTIVE' => 'Y']);
-        while ($g = $db->Fetch()) {
-            $out[(string)$g['ID']] = $g['NAME'];
-        }
-        return $out;
-    }
-
-    private static function getUserLevels(): array {
-        $out = ['0' => 'Без уровня [0]'];
-
-        try {
-            $connection = \Bitrix\Main\Application::getConnection();
-            if (!$connection->isTableExists('b_legacy_loyalty_level_rule')) {
-                return $out;
-            }
-
-            $res = $connection->query("
-                SELECT ID, NAME
-                FROM b_legacy_loyalty_level_rule
-                WHERE ACTIVE = 'Y'
-                ORDER BY SORT ASC, ID ASC
-            ");
-
-            while ($level = $res->fetch()) {
-                $id = (string)(int)$level['ID'];
-                $name = trim((string)($level['NAME'] ?? ''));
-                $out[$id] = htmlspecialcharsbx($name !== '' ? $name : 'Уровень #' . $id) . ' [' . $id . ']';
-            }
-        } catch (\Throwable $exception) {
-            return $out;
-        }
-
-        return $out;
     }
 }

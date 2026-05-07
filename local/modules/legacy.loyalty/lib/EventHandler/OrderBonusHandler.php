@@ -61,8 +61,7 @@ class OrderBonusHandler {
                 return;
             }
 
-            // Пересчёт уровня пользователя после сохранения заказа.
-            // Делаем именно тут (после save), чтобы подсчёт выполненных заказов видел актуальный STATUS_ID.
+            // пересчёт уровня пользователя после сохранения заказа.
             if (ProgramService::isLevelEnabled()) {
                 $userId = (int)$order->getUserId();
                 $completeStatus = ProgramService::getLevelCompleteOrderStatus();

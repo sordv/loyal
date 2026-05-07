@@ -4,8 +4,6 @@ use Bitrix\Main\Application;
 use Bitrix\Main\Loader;
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\ModuleManager;
-use Legacy\Loyalty\EventHandler\BonusHandler;
-use Legacy\Loyalty\Service\LevelBulkSyncService;
 
 Loc::loadMessages(__FILE__);
 
@@ -57,93 +55,13 @@ Class legacy_loyalty extends CModule {
     }
 
     function InstallEvents() {
-        RegisterModuleDependences(
-            'main',
-            'OnAfterUserRegister',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\UserLevelHandler',
-            'onAfterUserRegister'
-        );
-        RegisterModuleDependences(
-            'main',
-            'OnAfterUserAdd',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\UserLevelHandler',
-            'onAfterUserAdd'
-        );
-
-        RegisterModuleDependences(
-            'sale',
-            'OnSaleOrderBeforeSaved',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
-            'onSaleOrderBeforeSaved'
-        );
-        RegisterModuleDependences(
-            'sale',
-            'OnSaleOrderSaved',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
-            'onSaleOrderSaved'
-        );
-        RegisterModuleDependences(
-            'sale',
-            'OnSaleOrderPaid',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
-            'onSaleOrderPaid'
-        );
-        RegisterModuleDependences(
-            'sale',
-            'OnSaleStatusOrderChange',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
-            'onSaleStatusOrderChange'
-        );
-        RegisterModuleDependences(
-            'sale',
-            'OnSaleComponentOrderCreated',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
-            'onSaleComponentOrderCreated'
-        );
-        RegisterModuleDependences(
-            'sale',
-            'OnSaleComponentOrderResultPrepared',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
-            'onSaleComponentOrderResultPrepared'
-        );
-
-        RegisterModuleDependences(
-            'sale',
-            'OnSaleOrderBeforeSaved',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
-            'onSaleOrderBeforeSaved'
-        );
-        RegisterModuleDependences(
-            'sale',
-            'OnSaleComponentOrderCreated',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
-            'onSaleComponentOrderCreated'
-        );
-        RegisterModuleDependences(
-            'sale',
-            'OnSaleComponentOrderResultPrepared',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
-            'onSaleComponentOrderResultPrepared'
-        );
+        include __DIR__ . '/include/dependences_install.php';
 
         if (!Loader::includeModule($this->MODULE_ID)) {
             return false;
         }
 
-        LevelBulkSyncService::registerDailyAgent();
-        BonusHandler::registerAgents();
-
+        include __DIR__ . '/include/agents_install.php';
         \Legacy\Loyalty\Mail\MailEventsInstaller::install();
 
         return true;
@@ -169,102 +87,8 @@ Class legacy_loyalty extends CModule {
     }
 
     function UnInstallEvents() {
-        UnRegisterModuleDependences(
-            'main',
-            'OnAfterUserRegister',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\UserLevelHandler',
-            'onAfterUserRegister'
-        );
-        UnRegisterModuleDependences(
-            'main',
-            'OnAfterUserAdd',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\UserLevelHandler',
-            'onAfterUserAdd'
-        );
-
-        UnRegisterModuleDependences(
-            'sale',
-            'OnSaleOrderBeforeSaved',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
-            'onSaleOrderBeforeSaved'
-        );
-        UnRegisterModuleDependences(
-            'sale',
-            'OnSaleOrderSaved',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
-            'onSaleOrderSaved'
-        );
-        UnRegisterModuleDependences(
-            'sale',
-            'OnSaleOrderPaid',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
-            'onSaleOrderPaid'
-        );
-        UnRegisterModuleDependences(
-            'sale',
-            'OnSaleStatusOrderChange',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
-            'onSaleStatusOrderChange'
-        );
-        UnRegisterModuleDependences(
-            'sale',
-            'OnSaleComponentOrderCreated',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
-            'onSaleComponentOrderCreated'
-        );
-        UnRegisterModuleDependences(
-            'sale',
-            'OnSaleComponentOrderResultPrepared',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\OrderBonusHandler',
-            'onSaleComponentOrderResultPrepared'
-        );
-
-        UnRegisterModuleDependences(
-            'sale',
-            'OnSaleOrderBeforeSaved',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
-            'onSaleOrderBeforeSaved'
-        );
-        UnRegisterModuleDependences(
-            'sale',
-            'OnSaleComponentOrderCreated',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
-            'onSaleComponentOrderCreated'
-        );
-        UnRegisterModuleDependences(
-            'sale',
-            'OnSaleComponentOrderResultPrepared',
-            $this->MODULE_ID,
-            '\Legacy\Loyalty\EventHandler\LevelDiscountHandler',
-            'onSaleComponentOrderResultPrepared'
-        );
-
-        $entityClass = '\Legacy\Loyalty\Tables\LevelRuleTable';
-        $handlerClass = '\Legacy\Loyalty\EventHandler\LevelRuleSyncHandler';
-        foreach (['OnAfterAdd', 'OnAfterUpdate', 'OnAfterDelete'] as $eventName) {
-            \Bitrix\Main\EventManager::getInstance()->unregisterEventHandler(
-                '',
-                $entityClass,
-                $eventName,
-                $this->MODULE_ID,
-                $handlerClass,
-                'onAfterRuleChanged'
-            );
-        }
-
-        \CAgent::RemoveAgent('\Legacy\Loyalty\Service\LevelBulkSyncService::runDailyAgent();', 'legacy.loyalty');
-        \CAgent::RemoveAgent('\Legacy\Loyalty\Service\BonusService::cleanupExpiredBonuses();', 'legacy.loyalty');
-        \CAgent::RemoveAgent('\Legacy\Loyalty\Service\BonusExpireMailService::runDailyAgent();', 'legacy.loyalty');
+        include __DIR__ . '/include/dependences_uninstall.php';
+        include __DIR__ . '/include/agents_uninstall.php';
 
         if (Loader::includeModule($this->MODULE_ID)) {
             \Legacy\Loyalty\Mail\MailEventsInstaller::uninstall();
@@ -280,7 +104,7 @@ Class legacy_loyalty extends CModule {
         $this->InstallFiles();
 
         if (Loader::includeModule('sale')) {
-            include(__DIR__ . '/include/order_props.php');
+            include(__DIR__ . '/include/order_props_install.php');
         }
 
         ModuleManager::registerModule($this->MODULE_ID);
@@ -301,7 +125,7 @@ Class legacy_loyalty extends CModule {
             $this->UnInstallFiles();
 
             if (Loader::includeModule('sale')) {
-                include(__DIR__ . '/include/del_order_props.php');
+                include(__DIR__ . '/include/order_props_uninstall.php');
             }
 
             if($request["savedata"] != "Y")

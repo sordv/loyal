@@ -6,20 +6,10 @@ use Legacy\Loyalty\Service\LevelService;
 use Legacy\Loyalty\Service\ProgramService;
 
 class UserLevelHandler {
-    /**
-     * Событие main:OnAfterUserRegister.
-     *
-     * @param array $arFields
-     */
     public static function onAfterUserRegister(array &$arFields): void {
         self::syncLevelFromFields($arFields);
     }
 
-    /**
-     * Событие main:OnAfterUserAdd.
-     *
-     * @param array $arFields
-     */
     public static function onAfterUserAdd(array &$arFields): void {
         self::syncLevelFromFields($arFields);
     }

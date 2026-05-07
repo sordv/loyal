@@ -5,33 +5,8 @@ namespace Legacy\Loyalty\Service;
 use Bitrix\Main\Application;
 use Bitrix\Main\Config\Option;
 
-/**
- * Ежедневная рассылка предупреждений об истечении бонусов через N дней.
- * Для каждого N: строки в b_legacy_loyalty_bonus_user, где дата истечения = сегодня + N календарных дней.
- */
 class BonusExpireMailService {
     public const AGENT_RUN = '\Legacy\Loyalty\Service\BonusExpireMailService::runDailyAgent();';
-
-    public static function registerAgent(): void {
-        self::unregisterAgent();
-
-        $next = LevelBulkSyncService::nextDailyAgentRunFull();
-
-        \CAgent::AddAgent(
-            self::AGENT_RUN,
-            'legacy.loyalty',
-            'N',
-            86400,
-            '',
-            'Y',
-            $next,
-            35
-        );
-    }
-
-    public static function unregisterAgent(): void {
-        \CAgent::RemoveAgent(self::AGENT_RUN, 'legacy.loyalty');
-    }
 
     public static function runDailyAgent(): string {
         if (!ProgramService::isBonusEnabled()) {
