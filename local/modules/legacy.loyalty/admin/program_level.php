@@ -25,9 +25,9 @@ $message = null;
 if ($request->get('action') === 'delete' && check_bitrix_sessid()) {
     $ruleId = (int)$request->get('rule_id');
     if ($ruleId > 0 && class_exists('Legacy\Loyalty\Tables\LevelRuleTable')) {
-        $rule = \Legacy\Loyalty\Tables\LevelRuleTable::getById($ruleId)->fetch();
+        $rule = LevelRuleTable::getById($ruleId)->fetch();
         if ($rule) {
-            \Legacy\Loyalty\Tables\LevelRuleTable::delete($ruleId);
+            LevelRuleTable::delete($ruleId);
             LevelBulkSyncService::syncAllRegisteredUsers();
             LocalRedirect($APPLICATION->GetCurPageParam() . '&deleted=Y');
         }

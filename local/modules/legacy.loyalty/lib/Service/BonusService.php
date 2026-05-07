@@ -40,7 +40,7 @@ class BonusService {
         return self::AGENT_CLEANUP_EXPIRED;
     }
 
-    public static function addBonus($userId, $amount, ?int $orderId = null) {
+    public static function addBonus($userId, $amount, ?int $orderId = null, string $source = 'order') {
         if ($amount <= 0) return;
 
         $settings = self::getSettings();
@@ -86,9 +86,10 @@ class BonusService {
             }
 
             $historyOrderId = $orderId !== null ? (int)$orderId : 'NULL';
+            $sourceSql = $sqlHelper->forSql($source);
             $connection->queryExecute("
                 INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, ORDER_ID, SOURCE)
-                VALUES ({$userId}, 'add', {$amount}, {$historyOrderId}, 'order');
+                VALUES ({$userId}, 'add', {$amount}, {$historyOrderId}, '{$sourceSql}');
             ");
 
             $connection->commitTransaction();

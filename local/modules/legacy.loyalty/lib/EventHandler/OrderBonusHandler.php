@@ -156,7 +156,7 @@ class OrderBonusHandler {
             $addResult = BonusCalculator::calculateAdd($order, ['userId' => $userId]);
             $amount = (int)($addResult['amount'] ?? 0);
             if ($amount > 0) {
-                BonusService::addBonus($userId, $amount, $orderId);
+                BonusService::addBonus($userId, $amount, $orderId, 'bonussystem');
             }
         }
     }

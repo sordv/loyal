@@ -1,0 +1,29 @@
+<?php
+namespace Legacy\Loyalty\Tables;
+
+use Bitrix\Main\Entity\DataManager;
+use Bitrix\Main\Entity\IntegerField;
+use Bitrix\Main\Entity\StringField;
+use Bitrix\Main\Entity\TextField;
+
+class EventRuleTable extends DataManager {
+    public static function getTableName() {
+        return 'b_legacy_loyalty_event_rule';
+    }
+
+    public static function getMap() {
+        return [
+            new IntegerField('ID', ['primary' => true, 'autocomplete' => true]),
+            new IntegerField('SORT', ['default' => 100]),
+            new StringField('ACTIVE', ['default' => 'Y', 'values' => ['Y', 'N']]),
+            new StringField('NAME', ['size' => 255]),
+            new StringField('TYPE', ['size' => 50]),
+            new StringField('VALUE', ['size' => 255]),
+            new StringField('FIRE_MODE', ['default' => 'Once', 'values' => ['Once', 'Days', 'Every']]),
+            new IntegerField('FIRE_DAYS', ['default' => 0]),
+            new TextField('CONDITIONS', ['serialized' => true]),
+            new TextField('PRIVILEGES', ['serialized' => true]),
+        ];
+    }
+}
+
