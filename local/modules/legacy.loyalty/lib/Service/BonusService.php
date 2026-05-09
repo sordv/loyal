@@ -4,11 +4,12 @@ namespace Legacy\Loyalty\Service;
 
 use Bitrix\Main\Config\Option;
 use Bitrix\Main\Application;
+use Legacy\Loyalty\Tables\EventRuleTable;
 
 class BonusService {
-    /** Строка для \CAgent (ежедневное удаление просроченных начислений). */
     public const AGENT_CLEANUP_EXPIRED = '\Legacy\Loyalty\Service\BonusService::cleanupExpiredBonuses();';
 
+    // получить сроки жизни и задержки из настроек модуля
     private static function getSettings() {
         return [
             'lifetime' => max(0, (int)Option::get("legacy.loyalty", "bonus_lifetime", 365)),
@@ -16,6 +17,7 @@ class BonusService {
         ];
     }
 
+    // получить правильную дату для правила (с учетом заддержки активации)
     private static function getDate($offset = 0) {
         $date = new \DateTime();
         if ($offset !== 0) {
@@ -24,9 +26,7 @@ class BonusService {
         return $date->format('Y-m-d');
     }
 
-    /**
-     * Удаляет записи с истёкшим EXPIRE_AT. Вызывается агентом раз в сутки — должен вернуть строку агента.
-     */
+    // удаление бонусов с истекшим сроком действия (поле EXPIRE_AT)
     public static function cleanupExpiredBonuses(): string {
         $connection = Application::getConnection();
         $sqlHelper = $connection->getSqlHelper();
@@ -40,15 +40,17 @@ class BonusService {
         return self::AGENT_CLEANUP_EXPIRED;
     }
 
+    // начисление бонусов
+    // используется системой (программой начисления, списания бонусов и программой вознаграждения)
+    // начисляет бонусы с задержкой (если есть)
     public static function addBonus($userId, $amount, ?int $orderId = null, string $source = 'order') {
-        if ($amount <= 0) return;
+        $userId = (int)$userId;
+        $amount = (int)$amount;
+        if ($userId <= 0 || $amount <= 0) return;
 
         $settings = self::getSettings();
         $connection = Application::getConnection();
         $sqlHelper = $connection->getSqlHelper();
-
-        $userId = (int)$userId;
-        $amount = (int)$amount;
         $activateDate = self::getDate($settings['delay']);
         $expireDate = $settings['lifetime'] > 0 ? self::getDate($settings['delay'] + $settings['lifetime']) : null;
 
@@ -95,24 +97,41 @@ class BonusService {
             $connection->commitTransaction();
 
             try {
-                LoyaltyMailService::notifyBonusFromOrder($userId, $amount, $activateDate, $orderId);
+                if ($source === 'eventsystem') {
+                    $ruleId = (int)($orderId ?? 0);
+                    $ruleName = '';
+                    if ($ruleId > 0) {
+                        try {
+                            $rule = EventRuleTable::getById($ruleId)->fetch();
+                            if (is_array($rule) && !empty($rule['NAME'])) {
+                                $ruleName = (string)$rule['NAME'];
+                            }
+                        } catch (\Throwable $e) {
+                        }
+                    }
+                    LoyaltyMailService::notifyBonusFromEvent($userId, $amount, $activateDate, $ruleId, $ruleName);
+                } else {
+                    LoyaltyMailService::notifyBonusFromOrder($userId, $amount, $activateDate, $orderId);
+                }
             } catch (\Throwable $e) {
             }
-        } catch (\Exception $ex) {
+        } catch (\Throwable $ex) {
             $connection->rollbackTransaction();
             throw $ex;
         }
     }
 
+    // начисление бонусов администратором
+    // используется при ручном управлении пользователями
+    // начисляет бонусы без задержки (даже если по обычным правилам она есть)
     public static function addBonusByAdmin($userId, $amount) {
-        if ($amount <= 0) return;
+        $userId = (int)$userId;
+        $amount = (int)$amount;
+        if ($userId <= 0 || $amount <= 0) return;
 
         $settings = self::getSettings();
         $connection = Application::getConnection();
         $sqlHelper = $connection->getSqlHelper();
-
-        $userId = (int)$userId;
-        $amount = (int)$amount;
         $activateDate = self::getDate(0);
         $expireDate = $settings['lifetime'] > 0 ? self::getDate($settings['lifetime']) : null;
 
@@ -160,12 +179,16 @@ class BonusService {
                 LoyaltyMailService::notifyBonusFromAdmin($userId, $amount, $activateDate, $expireDate);
             } catch (\Throwable $e) {
             }
-        } catch (\Exception $ex) {
+        } catch (\Throwable $ex) {
             $connection->rollbackTransaction();
             throw $ex;
         }
     }
 
+    // списание бонусов
+    // используется системой (программой начисления, списания бонусов)
+    // списывает бонусы у которых раньше кончается срок действия
+    // не списывает еще не активные бонусы
     public static function spendBonus($userId, $amount, ?int $orderId = null) {
         if ($amount <= 0) return;
 
@@ -229,6 +252,10 @@ class BonusService {
         }
     }
 
+    // списание бонусов администратором
+    // используется при ручном управлении пользователями
+    // списывает бонусы у которых раньше кончается срок действия
+    // списывает еще не активные бонусы
     public static function spendBonusByAdmin($userId, $amount) {
         if ($amount <= 0) return;
 
@@ -290,6 +317,7 @@ class BonusService {
         }
     }
 
+    // получить баланс пользователя: активные + в задержке
     public static function getBalance($userId) {
         $connection = Application::getConnection();
         $userId = (int)$userId;

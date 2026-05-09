@@ -2,6 +2,7 @@
 
 use Bitrix\Main\Localization\Loc;
 use Bitrix\Main\Loader;
+use Bitrix\Main\Config\Option;
 use Bitrix\Main\Application;
 use Legacy\Loyalty\Tables\EventRuleTable;
 
@@ -19,6 +20,7 @@ if (!Loader::includeModule('legacy.loyalty')) {
 
 $request = Application::getInstance()->getContext()->getRequest();
 $message = null;
+$mailBonusEvent = Option::get("legacy.loyalty", "mail_bonus_event", "N");
 
 if ($request->get('action') === 'delete' && check_bitrix_sessid()) {
     $ruleId = (int)$request->get('rule_id');
@@ -36,6 +38,7 @@ if ($request->get('deleted') === 'Y') {
 }
 
 if ($request->isPost() && check_bitrix_sessid() && $request->getPost('save_settings')) {
+    Option::set("legacy.loyalty", "mail_bonus_event", $request->getPost("mail_bonus_event") === 'Y' ? 'Y' : 'N');
     LocalRedirect('menu_program.php?lang=' . LANG);
 }
 
@@ -144,11 +147,25 @@ $tabControl = new CAdminTabControl("tabControl", $aTabs);
     $tabControl->BeginNextTab();
     ?>
 
-    <div class="leglol-settings-actions">
-        <p>Тут будут базовые настройки</p>
-        <input type="hidden" name="save_settings" value="Y">
-        <input type="submit" name="save" value="<?= htmlspecialcharsbx(Loc::getMessage('LEGACY_LOYALTY_BTN_SAVE_SETTINGS')) ?>" class="adm-btn-save">
-    </div>
+    <tr class="heading">
+        <td colspan="2"><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_HEADING") ?></td>
+    </tr>
+    <tr>
+        <td><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_BONUS_EVENT") ?></td>
+        <td>
+            <label>
+                <input type="checkbox" name="mail_bonus_event" value="Y" <?= $mailBonusEvent === 'Y' ? 'checked' : '' ?>>
+            </label>
+            <a href="/bitrix/admin/message_admin.php?lang=<?= LANGUAGE_ID ?>&set_filter=Y&amp;find_type_id=<?= urlencode('LEGACY_LOYALTY_BONUS_EVENT_ADD') ?>" target="_blank"><?= Loc::getMessage("LEGACY_LOYALTY_MAIL_EDIT_TEMPLATE") ?></a>
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="2" class="leglol-settings-actions">
+            <input type="hidden" name="save_settings" value="Y">
+            <input type="submit" name="save" value="<?= htmlspecialcharsbx(Loc::getMessage('LEGACY_LOYALTY_BTN_SAVE_SETTINGS')) ?>" class="adm-btn-save">
+        </td>
+    </tr>
 
     <?php
     $tabControl->EndTab();

@@ -7,17 +7,23 @@ use Bitrix\Main\Loader;
 use Bitrix\Sale\Order;
 use Legacy\Loyalty\Mail\MailEventsInstaller;
 
-/**
- * Отправка почтовых уведомлений (типы и шаблоны — MailEventsInstaller при установке модуля).
- */
 class LoyaltyMailService {
     public const EVENT_BONUS_ORDER = MailEventsInstaller::EVENT_BONUS_ORDER;
+    public const EVENT_BONUS_EVENT = MailEventsInstaller::EVENT_BONUS_EVENT;
     public const EVENT_BONUS_ADMIN = MailEventsInstaller::EVENT_BONUS_ADMIN;
     public const EVENT_BONUS_EXPIRE = MailEventsInstaller::EVENT_BONUS_EXPIRE;
     public const EVENT_LEVEL_CHANGED = MailEventsInstaller::EVENT_LEVEL_CHANGED;
 
     private static function optionYes(string $name): bool {
         return Option::get('legacy.loyalty', $name, 'N') === 'Y';
+    }
+
+    private static function optionYesWithFallback(string $primary, string $fallback): bool {
+        $v = (string)Option::get('legacy.loyalty', $primary, '__UNSET__');
+        if ($v === '__UNSET__') {
+            return self::optionYes($fallback);
+        }
+        return $v === 'Y';
     }
 
     private static function userMailContext(int $userId): ?array {
@@ -95,6 +101,28 @@ class LoyaltyMailService {
             'ACTIVATE_DATE' => self::formatDateRu($activateDateYmd),
             'ORDER_ID' => $orderId !== null && $orderId > 0 ? (string)$orderId : '',
             'ORDER_ACCOUNT' => $orderNum,
+        ]);
+    }
+
+    public static function notifyBonusFromEvent(int $userId, int $amount, string $activateDateYmd, int $eventRuleId, string $eventName): void {
+        if (!ProgramService::isBonusEnabled()) {
+            return;
+        }
+        if (!self::optionYesWithFallback('mail_bonus_event', 'mail_bonus_order')) {
+            return;
+        }
+
+        $eventName = trim($eventName);
+        if ($eventName === '') {
+            $eventName = $eventRuleId > 0 ? ('Событие #' . $eventRuleId) : 'Событие';
+        }
+
+        self::send(self::EVENT_BONUS_EVENT, $userId, [
+            'BONUS_NAME' => ProgramService::getBonusDisplayName(),
+            'BONUS_AMOUNT' => (string)$amount,
+            'ACTIVATE_DATE' => self::formatDateRu($activateDateYmd),
+            'EVENT_RULE_ID' => $eventRuleId > 0 ? (string)$eventRuleId : '',
+            'EVENT_NAME' => $eventName,
         ]);
     }
 

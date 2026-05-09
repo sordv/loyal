@@ -11,4 +11,6 @@ DROP TABLE IF EXISTS b_legacy_loyalty_event_rule;
 
 DROP TABLE IF EXISTS b_legacy_loyalty_program;
 
+/*
 DROP TABLE IF EXISTS b_legacy_loyalty_system_log;
+*/

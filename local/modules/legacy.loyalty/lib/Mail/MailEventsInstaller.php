@@ -5,11 +5,12 @@ namespace Legacy\Loyalty\Mail;
 use Bitrix\Main\Application;
 use Bitrix\Main\Loader;
 
-/**
- * Регистрация типов почтовых событий и шаблонов при установке / снятие при удалении модуля.
- */
+/*
+Регистрация, удаление типов почтовых событий, шаблонов писем
+*/
 final class MailEventsInstaller {
     public const EVENT_BONUS_ORDER = 'LEGACY_LOYALTY_BONUS_ORDER_ADD';
+    public const EVENT_BONUS_EVENT = 'LEGACY_LOYALTY_BONUS_EVENT_ADD';
     public const EVENT_BONUS_ADMIN = 'LEGACY_LOYALTY_BONUS_ADMIN_ADD';
     public const EVENT_BONUS_EXPIRE = 'LEGACY_LOYALTY_BONUS_EXPIRE_WARNING';
     public const EVENT_LEVEL_CHANGED = 'LEGACY_LOYALTY_LEVEL_CHANGED';
@@ -41,6 +42,7 @@ final class MailEventsInstaller {
 
         $codes = [
             self::EVENT_BONUS_ORDER,
+            self::EVENT_BONUS_EVENT,
             self::EVENT_BONUS_ADMIN,
             self::EVENT_BONUS_EXPIRE,
             self::EVENT_LEVEL_CHANGED,
@@ -59,11 +61,14 @@ final class MailEventsInstaller {
         }
     }
 
-    /** @return array<string, array{name: string, desc: string}> */
     private static function eventTypes(): array {
         return [
             self::EVENT_BONUS_ORDER => [
                 'name' => 'Legacy Loyalty: бонусы за заказ',
+                'desc' => 'legacy.loyalty',
+            ],
+            self::EVENT_BONUS_EVENT => [
+                'name' => 'Legacy Loyalty: бонусы за событие',
                 'desc' => 'legacy.loyalty',
             ],
             self::EVENT_BONUS_ADMIN => [
@@ -81,13 +86,18 @@ final class MailEventsInstaller {
         ];
     }
 
-    /** @return array<string, array{subject: string, body: string}> */
     private static function templates(): array {
         return [
             self::EVENT_BONUS_ORDER => [
                 'subject' => 'Бонусы за заказ',
                 'body' => "Здравствуйте, #NAME#!\n"
                     . "Начислено #BONUS_AMOUNT# (#BONUS_NAME#), активация #ACTIVATE_DATE#, заказ #ORDER_ACCOUNT# (#ORDER_ID#).\n#SITE_NAME#",
+            ],
+            self::EVENT_BONUS_EVENT => [
+                'subject' => 'Начислены бонусы',
+                'body' => "Здравствуйте, #NAME#!\n"
+                    . "Начислено #BONUS_AMOUNT# (#BONUS_NAME#), активация #ACTIVATE_DATE#.\n"
+                    . "Основание: #EVENT_NAME#.\n#SITE_NAME#",
             ],
             self::EVENT_BONUS_ADMIN => [
                 'subject' => 'Начислены бонусы',
@@ -106,7 +116,6 @@ final class MailEventsInstaller {
         ];
     }
 
-    /** @return string[] */
     private static function collectSiteIds(): array {
         $out = [];
         $rs = \CSite::GetList('sort', 'desc', []);
@@ -117,7 +126,6 @@ final class MailEventsInstaller {
         return $out;
     }
 
-    /** @return string[] */
     private static function collectLanguageIds(): array {
         $out = [];
         if (class_exists('\CLanguage')) {

@@ -7,9 +7,6 @@ use Bitrix\Main\Loader;
 use Legacy\Loyalty\Tables\ProgramTable;
 
 class ProgramService {
-    /**
-     * Подпись бонусов для фронтенда (задаётся в админке program_bonus.php, хранится в options).
-     */
     public static function getBonusDisplayName(): string {
         $name = trim((string)Option::get('legacy.loyalty', 'bonus_name', 'Бонусы'));
 
@@ -25,7 +22,7 @@ class ProgramService {
     }
 
     public static function isEnabled(string $type): bool {
-        if (!Loader::includeModule('legacy.loyalty')) {
+        if (!Loader::includeModule('legacy.loyalty') && !class_exists(ProgramTable::class)) {
             return false;
         }
 
@@ -46,10 +43,6 @@ class ProgramService {
         return trim((string)Option::get('legacy.loyalty', 'bonus_accrual_order_status', 'F'));
     }
 
-    /**
-     * Статус заказа, который считаем "выполненным" для уровней (по умолчанию F).
-     * Важно, потому что в магазинах часто меняют коды статусов, но название остаётся "Выполнен".
-     */
     public static function getLevelCompleteOrderStatus(): string {
         return trim((string)Option::get('legacy.loyalty', 'level_complete_order_status', 'F'));
     }

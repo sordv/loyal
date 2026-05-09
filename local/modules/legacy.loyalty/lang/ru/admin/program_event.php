@@ -23,7 +23,9 @@ $MESS["LEGACY_LOYALTY_EVENT_REWARD_BONUS"] = "бонусов";
 
 
 // Общие для программы настройки
-
+$MESS["LEGACY_LOYALTY_MAIL_HEADING"] = "Почтовые уведомления";
+$MESS["LEGACY_LOYALTY_MAIL_EDIT_TEMPLATE"] = "Шаблоны писем";
+$MESS["LEGACY_LOYALTY_MAIL_BONUS_EVENT"] = "Начисление бонусов за событие";
 
 // Общие для вкладок настройки
 $MESS["LEGACY_LOYALTY_BTN_SAVE_SETTINGS"] = "Сохранить";
