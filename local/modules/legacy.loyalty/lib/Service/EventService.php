@@ -10,8 +10,8 @@ use Bitrix\Main\UserTable;
 use Legacy\Loyalty\Tables\EventHistoryTable;
 use Legacy\Loyalty\Tables\EventRuleTable;
 
-final class EventRewardService {
-    public const AGENT_DAILY = '\Legacy\Loyalty\Service\EventRewardService::runDailyAgent();';
+final class EventService {
+    public const AGENT_DAILY = '\Legacy\Loyalty\Service\EventService::runDailyAgent();';
 
     public static function runDailyAgent(): string {
         self::runForToday(null);

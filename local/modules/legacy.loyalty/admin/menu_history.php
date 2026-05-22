@@ -27,10 +27,6 @@ require($_SERVER["DOCUMENT_ROOT"]."/bitrix/modules/main/include/prolog_admin_aft
 
 <a href="/bitrix/admin/perfmon_table.php?lang=ru&table_name=b_legacy_loyalty_event_history">
     <?= Loc::getMessage("LEGACY_LOYALTY_TABLE_EVENT_HISTORY") ?>
-</a><br><br>
-
-<a href="/bitrix/admin/perfmon_table.php?lang=ru&table_name=b_legacy_loyalty_system_log">
-    <?= Loc::getMessage("LEGACY_LOYALTY_TABLE_SYSTEM_LOG") ?>
 </a>
 
 <?php

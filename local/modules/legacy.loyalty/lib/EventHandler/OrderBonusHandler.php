@@ -69,7 +69,7 @@ class OrderBonusHandler {
                     $completeStatus = 'F';
                 }
                 if ($userId > 0 && (string)$order->getField('STATUS_ID') === $completeStatus && (string)$order->getField('CANCELED') !== 'Y') {
-                    LevelService::syncUserLevelFromRules($userId);
+                    LevelService::syncUserLevel($userId);
                 }
             }
 

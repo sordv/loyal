@@ -8,17 +8,17 @@ class Conditions {
      * Convert flat POST array (from core_condtree) into nested conditions tree.
      * Compatible with the structure Bitrix condition tree widgets expect.
      */
-    public static function saveConditions(array $requestConditions): array
+    public static function saveConditions(array $reqConds): array
     {
         // core_condtree POST array keys look like: 0, 0__0, 0__1, 0__0__0, ...
         // If PHP receives them unordered, we may accidentally pick a non-root node as level 0.
         // Force stable "tree order" parsing.
-        if (!empty($requestConditions)) {
-            ksort($requestConditions, SORT_NATURAL);
+        if (!empty($reqConds)) {
+            ksort($reqConds, SORT_NATURAL);
         }
 
         $iblockIds = [];
-        foreach ($requestConditions as $cond) {
+        foreach ($reqConds as $cond) {
             if (!empty($cond['controlId']) && strpos((string)$cond['controlId'], 'CondIBProp') !== false) {
                 $parts = explode(':', (string)$cond['controlId']);
                 if (!empty($parts[1])) {
@@ -42,7 +42,7 @@ class Conditions {
         $lastLevel = 0;
         $skipEmptyControls = ['registrationDate', 'bonusPayment', 'hasDiscount'];
 
-        foreach ($requestConditions as $key => $cond) {
+        foreach ($reqConds as $key => $cond) {
             $keyParts = explode('__', (string)$key);
             $level = count($keyParts) - 1;
 
@@ -98,6 +98,13 @@ class Conditions {
 
                 if ($k === 'period' && in_array($block['controlId'], ['ordersSumPeriod', 'ordersCountPeriod'], true)) {
                     $v = (string)max(1, (int)$v);
+                }
+
+                if (
+                    $block['controlId'] === 'userBirthday'
+                    && in_array($k, ['daysBefore', 'daysAfter'], true)
+                ) {
+                    $v = (string)max(0, (int)$v);
                 }
 
                 $block['values'][$k] = $v;

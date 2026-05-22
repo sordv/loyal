@@ -147,12 +147,7 @@ class LoyaltyMailService {
         ]);
     }
 
-    public static function notifyBonusExpireWarning(
-        int $userId,
-        int $amount,
-        string $expireDateYmd,
-        int $daysBefore
-    ): void {
+    public static function notifyBonusExpireWarning(int $userId, int $amount, string $expireDateYmd, int $daysBefore): void {
         if (!ProgramService::isBonusEnabled()) {
             return;
         }
@@ -168,13 +163,7 @@ class LoyaltyMailService {
         ]);
     }
 
-    public static function notifyLevelChanged(
-        int $userId,
-        ?int $oldLevelId,
-        int $newLevelId,
-        string $oldLevelName,
-        string $newLevelName
-    ): void {
+    public static function notifyLevelChanged(int $userId, ?int $oldLevelId, int $newLevelId, string $oldLevelName, string $newLevelName): void {
         if (!ProgramService::isLevelEnabled()) {
             return;
         }

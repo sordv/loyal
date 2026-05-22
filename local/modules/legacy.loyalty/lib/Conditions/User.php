@@ -104,10 +104,10 @@ class User {
                     'name' => 'True',
                     'type' => 'select',
                     'values' => [
-                        'True' => 'Выполняется',
-                        'False' => 'Не выполняется',
+                        'True' => 'Выполняются',
+                        'False' => 'Не выполняются',
                     ],
-                    'defaultText' => 'Выполняется',
+                    'defaultText' => 'Выполняются',
                     'defaultValue' => 'True',
                 ],
             ],

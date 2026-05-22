@@ -46,7 +46,7 @@ $nextExec = ConvertTimeStamp($ts, 'FULL');
 
 // Ежедневные награды за события
 \CAgent::AddAgent(
-    \Legacy\Loyalty\Service\EventRewardService::AGENT_DAILY,
+    \Legacy\Loyalty\Service\EventService::AGENT_DAILY,
     'legacy.loyalty',
     'N',
     86400,

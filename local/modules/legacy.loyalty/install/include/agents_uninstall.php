@@ -10,4 +10,4 @@
 \CAgent::RemoveAgent('\Legacy\Loyalty\Service\LevelBulkSyncService::runDailyAgent();', 'legacy.loyalty');
 \CAgent::RemoveAgent('\Legacy\Loyalty\Service\BonusService::cleanupExpiredBonuses();', 'legacy.loyalty');
 \CAgent::RemoveAgent('\Legacy\Loyalty\Service\BonusExpireMailService::runDailyAgent();', 'legacy.loyalty');
-\CAgent::RemoveAgent('\Legacy\Loyalty\Service\EventRewardService::runDailyAgent();', 'legacy.loyalty');
+\CAgent::RemoveAgent('\Legacy\Loyalty\Service\EventService::runDailyAgent();', 'legacy.loyalty');

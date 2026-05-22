@@ -3,6 +3,9 @@
 namespace Legacy\Loyalty\Service;
 
 use Bitrix\Main\Loader;
+use Bitrix\Main\Type\Date;
+use Bitrix\Main\Type\DateTime;
+use Bitrix\Main\UserTable;
 use Bitrix\Sale;
 use Legacy\Loyalty\Tables\BonusRuleTable;
 
@@ -445,9 +448,116 @@ class BonusCalculator {
                 return self::compareList($context['personTypeId'], $values['value'] ?? [], $logic);
             case 'paymentSystem':
                 return self::compareList($context['paymentSystemIds'], $values['value'] ?? [], $logic);
+            case 'userBirthday':
+                return self::matchUserBirthdayCondition($context, $values);
         }
 
         return true;
+    }
+
+    private static function matchUserBirthdayCondition(array $context, array $values): bool {
+        $userId = (int)($context['userId'] ?? 0);
+        if ($userId <= 0) {
+            return false;
+        }
+
+        $birthday = self::getUserPersonalBirthday($userId);
+        if ($birthday === null) {
+            return false;
+        }
+
+        $daysBefore = max(0, (int)($values['daysBefore'] ?? 0));
+        $daysAfter = max(0, (int)($values['daysAfter'] ?? 0));
+
+        return self::isDateInBirthdayWindow(
+            new \DateTimeImmutable('today'),
+            $birthday,
+            $daysBefore,
+            $daysAfter
+        );
+    }
+
+    private static function getUserPersonalBirthday(int $userId): ?\DateTimeImmutable {
+        $row = UserTable::getList([
+            'filter' => ['=ID' => $userId],
+            'select' => ['PERSONAL_BIRTHDAY'],
+            'limit' => 1,
+        ])->fetch();
+
+        if (!$row) {
+            return null;
+        }
+
+        return self::parsePersonalBirthday($row['PERSONAL_BIRTHDAY'] ?? null);
+    }
+
+    private static function parsePersonalBirthday($value): ?\DateTimeImmutable {
+        if ($value instanceof Date) {
+            return new \DateTimeImmutable($value->format('Y-m-d'));
+        }
+        if ($value instanceof DateTime) {
+            return new \DateTimeImmutable($value->format('Y-m-d'));
+        }
+        if ($value instanceof \DateTimeInterface) {
+            return \DateTimeImmutable::createFromInterface($value)->setTime(0, 0);
+        }
+        if (!is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        $trimmed = trim($value);
+        $ts = MakeTimeStamp($trimmed, 'DD.MM.YYYY');
+        if ($ts === false) {
+            $ts = strtotime($trimmed);
+        }
+        if ($ts === false) {
+            return null;
+        }
+
+        return (new \DateTimeImmutable('@' . $ts))
+            ->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+    }
+
+    private static function isDateInBirthdayWindow(
+        \DateTimeImmutable $today,
+        \DateTimeImmutable $birthDate,
+        int $daysBefore,
+        int $daysAfter
+    ): bool {
+        $month = (int)$birthDate->format('n');
+        $day = (int)$birthDate->format('j');
+        $year = (int)$today->format('Y');
+
+        foreach ([$year - 1, $year, $year + 1] as $anchorYear) {
+            $anchor = self::makeBirthdayDate($anchorYear, $month, $day);
+            if ($anchor === null) {
+                continue;
+            }
+
+            $start = $anchor->sub(new \DateInterval('P' . $daysBefore . 'D'));
+            $end = $anchor->add(new \DateInterval('P' . $daysAfter . 'D'));
+
+            if ($today >= $start && $today <= $end) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function makeBirthdayDate(int $year, int $month, int $day): ?\DateTimeImmutable {
+        if (!checkdate($month, $day, $year)) {
+            if ($month === 2 && $day === 29) {
+                $day = 28;
+                if (!checkdate($month, $day, $year)) {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        }
+
+        return new \DateTimeImmutable(sprintf('%04d-%02d-%02d', $year, $month, $day));
     }
 
     private static function matchProductCondition(array $node, array $item): bool {

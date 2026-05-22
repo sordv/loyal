@@ -67,7 +67,7 @@ $APPLICATION->AddHeadString('<script>
 BX.message({
     BONUS: "'.Loc::getMessage("LEGACY_LOYALTY_USER_POPUP_BONUS").'",
     LEVEL: "'.Loc::getMessage("LEGACY_LOYALTY_USER_POPUP_LEVEL").'",
-    EVENT: "'.Loc::getMessage("LEGACY_LOYALTY_USER_POPUP_EVENT").'",
+    // EVENT: "'.Loc::getMessage("LEGACY_LOYALTY_USER_POPUP_EVENT").'",
     OK: "'.Loc::getMessage("LEGACY_LOYALTY_USER_POPUP_OK").'",
     INVALID: "'.Loc::getMessage("LEGACY_LOYALTY_USER_POPUP_INVALID").'",
     ADD: "'.Loc::getMessage("LEGACY_LOYALTY_USER_POPUP_ADD").'",
@@ -85,7 +85,7 @@ $lAdmin->AddHeaders([
         ["id" => "EMAIL", "content" => Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_EMAIL"), "default" => true],
         ["id" => "BONUS", "content" => Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_BONUS"), "default" => true],
         ["id" => "LEVEL", "content" => Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_LEVEL"), "default" => true],
-        ["id" => "EVENT", "content" => Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_EVENT"), "default" => true],
+        // ["id" => "EVENT", "content" => Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_EVENT"), "default" => true],
 ]);
 
 while ($user = $usersResult->fetch()) {
@@ -116,9 +116,11 @@ while ($user = $usersResult->fetch()) {
     $row->AddField("LEVEL", $levelName .
             ' <button type="button" class="leglol-open-popup" onclick="openLevelPopup('.$userId.', '.$levelId.')" title="'.Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_EDIT").'">✏️</button>'
     );
+    /*
     $row->AddField("EVENT",
             '<button type="button" class="leglol-open-popup" onclick="openRewardPopup('.$userId.')" title="'.Loc::getMessage("LEGACY_LOYALTY_USER_TABLE_AWARD").'">🎁</button>'
     );
+    */
 }
 
 $lAdmin->AddAdminContextMenu([]);
@@ -239,6 +241,7 @@ function openLevelPopup(userId, currentLevelId) {
     });
 }
 
+/*
 function openRewardPopup(userId) {
     BX.UI.Dialogs.MessageBox.show({
         title: BX.message('EVENT'),
@@ -250,6 +253,7 @@ function openRewardPopup(userId) {
         okCaption: 'Ок'
     });
 }
+*/
 
 </script>
 

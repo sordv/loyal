@@ -202,7 +202,7 @@ class LevelService {
         ];
     }
 
-    public static function getCompletedOrdersStats(int $userId, ?int $periodDays = null): array {
+    public static function getOrdersStats(int $userId, ?int $periodDays = null): array {
         if ($userId <= 0 || !Loader::includeModule('sale')) {
             return ['count' => 0, 'sum' => 0.0];
         }
@@ -238,10 +238,10 @@ class LevelService {
     }
 
     /**
-     * Завершённые заказы (как getCompletedOrdersStats) за предыдущий календарный месяц:
+     * Завершённые заказы (как getOrdersStats) за предыдущий календарный месяц:
      * [первый день прошлого месяца 00:00:00; первый день текущего месяца 00:00:00).
      */
-    public static function getCompletedOrdersStatsPreviousMonth(int $userId): array {
+    public static function getOrdersStatsPrevMonth(int $userId): array {
         if ($userId <= 0 || !Loader::includeModule('sale')) {
             return ['count' => 0, 'sum' => 0.0];
         }
@@ -291,7 +291,7 @@ class LevelService {
         ];
     }
 
-    public static function findBestMatchingLevelRuleId(int $userId): ?int {
+    public static function findBestLevel(int $userId): ?int {
         if ($userId <= 0 || !Loader::includeModule('sale')) {
             return null;
         }
@@ -315,7 +315,7 @@ class LevelService {
         return null;
     }
 
-    public static function syncUserLevelFromRules(int $userId): void {
+    public static function syncUserLevel(int $userId): void {
         if ($userId <= 0 || !ProgramService::isLevelEnabled()) {
             return;
         }
@@ -324,7 +324,7 @@ class LevelService {
             return;
         }
 
-        $bestRuleId = self::findBestMatchingLevelRuleId($userId);
+        $bestRuleId = self::findBestLevel($userId);
 
         $connection = Application::getConnection();
         $row = $connection->query(
@@ -445,34 +445,34 @@ class LevelService {
 
         switch ($id) {
             case 'ordersSum':
-                $stats = self::getCompletedOrdersStats($userId, null);
+                $stats = self::getOrdersStats($userId, null);
 
                 return self::compareNumber($stats['sum'], (float)($values['value'] ?? 0), $logic);
 
             case 'ordersCount':
-                $stats = self::getCompletedOrdersStats($userId, null);
+                $stats = self::getOrdersStats($userId, null);
 
                 return self::compareNumber($stats['count'], (float)($values['value'] ?? 0), $logic);
 
             case 'ordersSumPeriod':
                 $period = max(1, (int)($values['period'] ?? 30));
-                $stats = self::getCompletedOrdersStats($userId, $period);
+                $stats = self::getOrdersStats($userId, $period);
 
                 return self::compareNumber($stats['sum'], (float)($values['value'] ?? 0), $logic);
 
             case 'ordersCountPeriod':
                 $period = max(1, (int)($values['period'] ?? 30));
-                $stats = self::getCompletedOrdersStats($userId, $period);
+                $stats = self::getOrdersStats($userId, $period);
 
                 return self::compareNumber($stats['count'], (float)($values['value'] ?? 0), $logic);
 
             case 'ordersCountPrevMonth':
-                $stats = self::getCompletedOrdersStatsPreviousMonth($userId);
+                $stats = self::getOrdersStatsPrevMonth($userId);
 
                 return self::compareNumber($stats['count'], (float)($values['value'] ?? 0), $logic);
 
             case 'ordersSumPrevMonth':
-                $stats = self::getCompletedOrdersStatsPreviousMonth($userId);
+                $stats = self::getOrdersStatsPrevMonth($userId);
 
                 return self::compareNumber($stats['sum'], (float)($values['value'] ?? 0), $logic);
 

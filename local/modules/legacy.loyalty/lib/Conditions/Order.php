@@ -82,10 +82,10 @@ class Order {
                     'name' => 'True',
                     'type' => 'select',
                     'values' => [
-                        'True' => 'Выполняется',
-                        'False' => 'Не выполняется',
+                        'True' => 'Выполняются',
+                        'False' => 'Не выполняются',
                     ],
-                    'defaultText' => 'Выполняется',
+                    'defaultText' => 'Выполняются',
                     'defaultValue' => 'True',
                 ],
             ],
@@ -355,6 +355,32 @@ class Order {
                             'defaultText' => '...',
                             'defaultValue' => '',
                         ],
+                    ],
+                ],
+                // ДЕНЬ РОЖДЕНИЯ ПОЛЬЗОВАТЕЛЯ
+                [
+                    'controlId' => 'userBirthday',
+                    'group' => false,
+                    'label' => 'День рождения пользователя',
+                    'showIn' => ['CondGroup'],
+                    'control' => [
+                        ['id' => 'prefix', 'type' => 'prefix', 'text' => 'В день рождения пользователя'],
+                        [
+                            'type' => 'input',
+                            'id' => 'daysBefore',
+                            'name' => 'daysBefore',
+                            'show_value' => 'Y',
+                            'defaultValue' => '0',
+                        ],
+                        ['id' => 'before_suffix', 'type' => 'prefix', 'text' => 'дней перед'],
+                        [
+                            'type' => 'input',
+                            'id' => 'daysAfter',
+                            'name' => 'daysAfter',
+                            'show_value' => 'Y',
+                            'defaultValue' => '0',
+                        ],
+                        ['id' => 'after_suffix', 'type' => 'prefix', 'text' => 'дней после'],
                     ],
                 ],
             ]

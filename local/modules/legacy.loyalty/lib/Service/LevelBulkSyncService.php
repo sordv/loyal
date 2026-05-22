@@ -45,7 +45,7 @@ class LevelBulkSyncService {
             }
 
             foreach ($ids as $userId) {
-                LevelService::syncUserLevelFromRules($userId);
+                LevelService::syncUserLevel($userId);
             }
 
             $lastId = max($ids);

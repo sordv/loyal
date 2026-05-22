@@ -30,7 +30,7 @@ class UserLevelHandler {
             return;
         }
 
-        LevelService::syncUserLevelFromRules($userId);
+        LevelService::syncUserLevel($userId);
     }
 }
 
