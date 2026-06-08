@@ -43,10 +43,13 @@ class BonusService {
     // начисление бонусов
     // используется системой (программой начисления, списания бонусов и программой вознаграждения)
     // начисляет бонусы с задержкой (если есть)
-    public static function addBonus($userId, $amount, ?int $orderId = null, string $source = 'order') {
+    public static function addBonus($userId, $amount, int $sourceId, string $sourceType) {
         $userId = (int)$userId;
         $amount = (int)$amount;
-        if ($userId <= 0 || $amount <= 0) return;
+        $sourceId = (int)$sourceId;
+        if ($userId <= 0 || $amount <= 0 || $sourceId <= 0) {
+            return;
+        }
 
         $settings = self::getSettings();
         $connection = Application::getConnection();
@@ -87,31 +90,27 @@ class BonusService {
                 ");
             }
 
-            $historyOrderId = $orderId !== null ? (int)$orderId : 'NULL';
-            $sourceSql = $sqlHelper->forSql($source);
+            $sourceTypeSql = $sqlHelper->forSql($sourceType);
             $connection->queryExecute("
-                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, ORDER_ID, SOURCE)
-                VALUES ({$userId}, 'add', {$amount}, {$historyOrderId}, '{$sourceSql}');
+                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE_TYPE, SOURCE_ID, SOURCE)
+                VALUES ({$userId}, 'add', {$amount}, '{$sourceTypeSql}', {$sourceId}, 'system');
             ");
 
             $connection->commitTransaction();
 
             try {
-                if ($source === 'eventsystem') {
-                    $ruleId = (int)($orderId ?? 0);
+                if ($sourceType === 'eventsystem') {
                     $ruleName = '';
-                    if ($ruleId > 0) {
-                        try {
-                            $rule = EventRuleTable::getById($ruleId)->fetch();
-                            if (is_array($rule) && !empty($rule['NAME'])) {
-                                $ruleName = (string)$rule['NAME'];
-                            }
-                        } catch (\Throwable $e) {
+                    try {
+                        $rule = EventRuleTable::getById($sourceId)->fetch();
+                        if (is_array($rule) && !empty($rule['NAME'])) {
+                            $ruleName = (string)$rule['NAME'];
                         }
+                    } catch (\Throwable $e) {
                     }
-                    LoyaltyMailService::notifyBonusFromEvent($userId, $amount, $activateDate, $ruleId, $ruleName);
-                } else {
-                    LoyaltyMailService::notifyBonusFromOrder($userId, $amount, $activateDate, $orderId);
+                    LoyaltyMailService::notifyBonusFromEvent($userId, $amount, $activateDate, $sourceId, $ruleName);
+                } elseif ($sourceType === 'bonussystem') {
+                    LoyaltyMailService::notifyBonusFromOrder($userId, $amount, $activateDate, $sourceId);
                 }
             } catch (\Throwable $e) {
             }
@@ -124,10 +123,11 @@ class BonusService {
     // начисление бонусов администратором
     // используется при ручном управлении пользователями
     // начисляет бонусы без задержки (даже если по обычным правилам она есть)
-    public static function addBonusByAdmin($userId, $amount) {
+    public static function addBonusByAdmin($userId, $amount, $adminId) {
         $userId = (int)$userId;
         $amount = (int)$amount;
-        if ($userId <= 0 || $amount <= 0) return;
+        $adminId = (int)$adminId;
+        if ($userId <= 0 || $amount <= 0 || $adminId <= 0) return;
 
         $settings = self::getSettings();
         $connection = Application::getConnection();
@@ -169,8 +169,8 @@ class BonusService {
             }
 
             $connection->queryExecute("
-                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE)
-                VALUES ({$userId}, 'add', {$amount}, 'admin'); 
+                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE_TYPE, SOURCE_ID, SOURCE)
+                VALUES ({$userId}, 'add', {$amount}, 'manual', {$adminId}, 'admin');
             ");
 
             $connection->commitTransaction();
@@ -189,8 +189,11 @@ class BonusService {
     // используется системой (программой начисления, списания бонусов)
     // списывает бонусы у которых раньше кончается срок действия
     // не списывает еще не активные бонусы
-    public static function spendBonus($userId, $amount, ?int $orderId = null) {
-        if ($amount <= 0) return;
+    public static function spendBonus($userId, $amount, int $sourceId) {
+        $sourceId = (int)$sourceId;
+        if ($amount <= 0 || $sourceId <= 0) {
+            return;
+        }
 
         $connection = Application::getConnection();
         $sqlHelper = $connection->getSqlHelper();
@@ -239,10 +242,9 @@ class BonusService {
                 }
             }
 
-            $historyOrderId = $orderId !== null ? (int)$orderId : 'NULL';
             $connection->queryExecute("
-                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, ORDER_ID, SOURCE)
-                VALUES ({$userId}, 'spend', {$amount}, {$historyOrderId}, 'order')
+                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE_TYPE, SOURCE_ID, SOURCE)
+                VALUES ({$userId}, 'spend', {$amount}, 'bonussystem', {$sourceId}, 'system')
             ");
 
             $connection->commitTransaction();
@@ -256,13 +258,15 @@ class BonusService {
     // используется при ручном управлении пользователями
     // списывает бонусы у которых раньше кончается срок действия
     // списывает еще не активные бонусы
-    public static function spendBonusByAdmin($userId, $amount) {
+    public static function spendBonusByAdmin($userId, $amount, $adminId) {
         if ($amount <= 0) return;
 
         $connection = Application::getConnection();
         $sqlHelper = $connection->getSqlHelper();
 
         $userId = (int)$userId;
+        $adminId = (int)$adminId;
+        if ($adminId <= 0) return;
         $needToSpend = (int)$amount;
         $today = self::getDate(0);
         $todaySql = $sqlHelper->forSql($today);
@@ -306,8 +310,8 @@ class BonusService {
             }
 
             $connection->queryExecute("
-                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE)
-                VALUES ({$userId}, 'spend', {$amount}, 'admin')
+                INSERT INTO b_legacy_loyalty_bonus_history (USER_ID, TYPE, AMOUNT, SOURCE_TYPE, SOURCE_ID, SOURCE)
+                VALUES ({$userId}, 'spend', {$amount}, 'manual', {$adminId}, 'admin')
             ");
 
             $connection->commitTransaction();
@@ -345,8 +349,8 @@ class BonusService {
         ];
     }
 
-    public static function hasOrderOperation(int $orderId, string $type): bool {
-        if ($orderId <= 0 || ($type !== 'add' && $type !== 'spend')) {
+    public static function hasOrderOperation(int $sourceId, string $type): bool {
+        if ($sourceId <= 0 || ($type !== 'add' && $type !== 'spend')) {
             return false;
         }
 
@@ -357,7 +361,7 @@ class BonusService {
         $row = $connection->query("
             SELECT ID
             FROM b_legacy_loyalty_bonus_history
-            WHERE ORDER_ID = {$orderId}
+            WHERE SOURCE_ID = {$sourceId}
               AND TYPE = '{$typeSql}'
             ORDER BY ID DESC
             LIMIT 1

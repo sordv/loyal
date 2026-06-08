@@ -33,10 +33,13 @@ if ($request->isPost() && check_bitrix_sessid()) {
         $amount = (int)$request->getPost("amount");
         $type = $request->getPost("type");
 
+        global $USER;
+        $adminId = (int)$USER->GetID();
+
         if ($type === "add") {
-            BonusService::addBonusByAdmin($userId, $amount);
+            BonusService::addBonusByAdmin($userId, $amount, $adminId);
         } else {
-            BonusService::spendBonusByAdmin($userId, $amount);
+            BonusService::spendBonusByAdmin($userId, $amount, $adminId);
         }
     }
 
