@@ -22,7 +22,7 @@ final class EventService {
         if (!Loader::includeModule('main')) {
             return ['processedUsers' => 0, 'processedRules' => 0, 'awards' => 0];
         }
-        if (!ProgramService::isEnabled('event')) {
+        if (!ProgramService::isEventEnabled()) {
             return ['processedUsers' => 0, 'processedRules' => 0, 'awards' => 0];
         }
 

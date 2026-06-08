@@ -15,20 +15,10 @@ class ProgramTable extends Entity\DataManager
     public static function getMap()
     {
         return [
-            new Entity\IntegerField('ID', [
-                'primary' => true,
-                'autocomplete' => true,
-            ]),
-            new Entity\StringField('TYPE', [
-                'required' => true,
-            ]),
-            new Entity\StringField('NAME', [
-                'required' => true,
-            ]),
-            new Entity\BooleanField('ACTIVE', [
-                'values' => ['N', 'Y'],
-                'default_value' => 'Y'
-            ]),
+            new Entity\IntegerField('ID', ['primary' => true, 'autocomplete' => true]),
+            new Entity\StringField('TYPE', ['required' => true]),
+            new Entity\StringField('NAME', ['required' => true]),
+            new Entity\BooleanField('ACTIVE', ['values' => ['N', 'Y'], 'default_value' => 'Y']),
         ];
     }
 }

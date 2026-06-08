@@ -21,7 +21,11 @@ class ProgramService {
         return self::isEnabled('level');
     }
 
-    public static function isEnabled(string $type): bool {
+    public static function isEventEnabled(): bool {
+        return self::isEnabled('event');
+    }
+
+    private static function isEnabled(string $type): bool {
         if (!Loader::includeModule('legacy.loyalty') && !class_exists(ProgramTable::class)) {
             return false;
         }

@@ -58,7 +58,7 @@ class LevelService {
                 try {
                     LoyaltyMailService::notifyLevelChanged(
                         $userId,
-                        $oldLevel,
+                        (int)($oldLevel ?? 0),
                         $levelId,
                         self::fetchLevelRuleName($oldLevel),
                         self::fetchLevelRuleName($levelId)
@@ -120,7 +120,7 @@ class LevelService {
                 try {
                     LoyaltyMailService::notifyLevelChanged(
                         $userId,
-                        $oldLevel,
+                        (int)($oldLevel ?? 0),
                         $levelId,
                         self::fetchLevelRuleName($oldLevel),
                         self::fetchLevelRuleName($levelId)

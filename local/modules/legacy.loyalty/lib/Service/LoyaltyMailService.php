@@ -163,7 +163,7 @@ class LoyaltyMailService {
         ]);
     }
 
-    public static function notifyLevelChanged(int $userId, ?int $oldLevelId, int $newLevelId, string $oldLevelName, string $newLevelName): void {
+    public static function notifyLevelChanged(int $userId, int $oldLevelId, int $newLevelId, string $oldLevelName, string $newLevelName): void {
         if (!ProgramService::isLevelEnabled()) {
             return;
         }
@@ -172,7 +172,7 @@ class LoyaltyMailService {
         }
 
         self::send(self::EVENT_LEVEL_CHANGED, $userId, [
-            'OLD_LEVEL_ID' => $oldLevelId !== null && $oldLevelId > 0 ? (string)$oldLevelId : '',
+            'OLD_LEVEL_ID' => (string)$oldLevelId,
             'NEW_LEVEL_ID' => (string)$newLevelId,
             'OLD_LEVEL_NAME' => $oldLevelName,
             'NEW_LEVEL_NAME' => $newLevelName,
