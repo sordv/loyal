@@ -2,7 +2,7 @@ DROP TABLE b_legacy_loyalty_program;
 
 CREATE TABLE b_legacy_loyalty_program (
     ID INT AUTO_INCREMENT PRIMARY KEY,
-    TYPE VARCHAR(50) NOT NULL,
+    TYPE ENUM('bonus', 'level', 'event') NOT NULL,
     NAME VARCHAR(255) NOT NULL,
     ACTIVE CHAR(1) DEFAULT 'N'
 );
@@ -17,9 +17,9 @@ CREATE TABLE IF NOT EXISTS b_legacy_loyalty_bonus_rule (
     SORT INT DEFAULT 100,
     ACTIVE CHAR(1) DEFAULT 'Y',
     NAME VARCHAR(255),
-    TYPE VARCHAR(20),
+    TYPE ENUM('add', 'spend'),
     AMOUNT INT,
-    AMOUNT_TYPE VARCHAR(20),
+    AMOUNT_TYPE ENUM('percent', 'fixed'),
     CONDITIONS_ORDER TEXT,
     CONDITIONS_PRODUCT TEXT
 );
@@ -27,11 +27,11 @@ CREATE TABLE IF NOT EXISTS b_legacy_loyalty_bonus_rule (
 CREATE TABLE IF NOT EXISTS b_legacy_loyalty_bonus_history (
     ID INT AUTO_INCREMENT PRIMARY KEY,
     USER_ID INT,
-    TYPE VARCHAR(50),
+    TYPE ENUM('add', 'spend'),
     AMOUNT INT,
-    SOURCE_TYPE VARCHAR(50),
+    SOURCE_TYPE ENUM('bonussystem', 'eventsystem', 'manual'),
     SOURCE_ID INT NULL,
-    SOURCE VARCHAR(50),
+    SOURCE ENUM('admin', 'system'),
     CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS b_legacy_loyalty_level_history (
     USER_ID INT,
     OLD_LEVEL_ID INT NULL,
     NEW_LEVEL_ID INT,
-    SOURCE VARCHAR(50),
+    SOURCE ENUM('admin', 'system'),
     CREATED_AT DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

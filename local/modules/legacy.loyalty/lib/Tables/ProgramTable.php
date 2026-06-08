@@ -16,7 +16,10 @@ class ProgramTable extends Entity\DataManager
     {
         return [
             new Entity\IntegerField('ID', ['primary' => true, 'autocomplete' => true]),
-            new Entity\StringField('TYPE', ['required' => true]),
+            new Entity\StringField('TYPE', [
+                'required' => true,
+                'values' => ['bonus', 'level', 'event'],
+            ]),
             new Entity\StringField('NAME', ['required' => true]),
             new Entity\BooleanField('ACTIVE', ['values' => ['N', 'Y'], 'default_value' => 'Y']),
         ];

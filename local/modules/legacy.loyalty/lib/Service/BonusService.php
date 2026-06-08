@@ -50,6 +50,9 @@ class BonusService {
         if ($userId <= 0 || $amount <= 0 || $sourceId <= 0) {
             return;
         }
+        if ($sourceType !== 'bonussystem' && $sourceType !== 'eventsystem') {
+            return;
+        }
 
         $settings = self::getSettings();
         $connection = Application::getConnection();
