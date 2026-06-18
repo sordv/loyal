@@ -104,9 +104,7 @@ if ($request->isPost() && check_bitrix_sessid()) {
     if (!is_array($raw)) {
         // invalid date or no conditions posted; don't proceed with saving
     } else {
-    $conditionsToSave = is_array($raw)
-        ? LoyaltyConditions::saveConditions($raw)
-        : ($arRule['CONDITIONS'] ?? []);
+    $conditionsToSave = is_array($raw) ? LoyaltyConditions::saveConditions($raw) : ($arRule['CONDITIONS'] ?? []);
 
     $arFields = [
         "ACTIVE" => $request->getPost("ACTIVE") === "Y" ? "Y" : "N",
@@ -219,7 +217,7 @@ if (!defined('BT_COND_BUILD_USER')) define('BT_COND_BUILD_USER', 'user');
     <tr>
         <td><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_SORT") ?></td>
         <td>
-            <input type="number" name="SORT" value="<?= (int)$arRule['SORT'] ?>" class="leglol-numeric-input">
+            <input type="number" name="SORT" value="<?= (int)$arRule['SORT'] ?>" class="ll-numeric-input">
         </td>
     </tr>
 
@@ -246,7 +244,7 @@ if (!defined('BT_COND_BUILD_USER')) define('BT_COND_BUILD_USER', 'user');
                 : UserConditions::baseConditions('json');
             $regDateMarker = 'Дата регистрации';
             ?>
-            <div id="UserConditions" class="leglol-condition-builder"></div>
+            <div id="UserConditions" class="ll-condition-builder"></div>
             <script>
                 (function () {
                     BX.ready(function () {
@@ -268,25 +266,25 @@ if (!defined('BT_COND_BUILD_USER')) define('BT_COND_BUILD_USER', 'user');
     <tr>
         <td><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_PRIV_CART_DISCOUNT") ?: 'Скидка на корзину %' ?></td>
         <td>
-            <input type="number" name="PRIVILEGES[cartDiscountPercent]" value="<?= htmlspecialcharsbx($arRule['PRIVILEGES']['cartDiscountPercent']) ?>" class="leglol-numeric-input" min="0" max="100" step="0.01"> %
+            <input type="number" name="PRIVILEGES[cartDiscountPercent]" value="<?= htmlspecialcharsbx($arRule['PRIVILEGES']['cartDiscountPercent']) ?>" class="ll-numeric-input" min="0" max="100" step="0.01"> %
         </td>
     </tr>
     <tr>
         <td><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_PRIV_DELIVERY_DISCOUNT") ?: 'Скидка на доставку %' ?></td>
         <td>
-            <input type="number" name="PRIVILEGES[deliveryDiscountPercent]" value="<?= htmlspecialcharsbx($arRule['PRIVILEGES']['deliveryDiscountPercent']) ?>" class="leglol-numeric-input" min="0" max="100" step="0.01"> %
+            <input type="number" name="PRIVILEGES[deliveryDiscountPercent]" value="<?= htmlspecialcharsbx($arRule['PRIVILEGES']['deliveryDiscountPercent']) ?>" class="ll-numeric-input" min="0" max="100" step="0.01"> %
         </td>
     </tr>
     <tr>
         <td><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_PRIV_ADD_MULTIPLIER") ?: 'Повышенный коэффициент начисляемых бонусов' ?></td>
         <td>
-            <input type="number" name="PRIVILEGES[addBonusMultiplier]" value="<?= htmlspecialcharsbx($arRule['PRIVILEGES']['addBonusMultiplier']) ?>" class="leglol-numeric-input" min="0" step="0.01">
+            <input type="number" name="PRIVILEGES[addBonusMultiplier]" value="<?= htmlspecialcharsbx($arRule['PRIVILEGES']['addBonusMultiplier']) ?>" class="ll-numeric-input" min="0" step="0.01">
         </td>
     </tr>
     <tr>
         <td><?= Loc::getMessage("LEGACY_LOYALTY_LEVEL_PRIV_SPEND_MULTIPLIER") ?: 'Повышенный коэффициент бонусов, разрешенных к списанию' ?></td>
         <td>
-            <input type="number" name="PRIVILEGES[spendBonusMultiplier]" value="<?= htmlspecialcharsbx($arRule['PRIVILEGES']['spendBonusMultiplier']) ?>" class="leglol-numeric-input" min="0" step="0.01">
+            <input type="number" name="PRIVILEGES[spendBonusMultiplier]" value="<?= htmlspecialcharsbx($arRule['PRIVILEGES']['spendBonusMultiplier']) ?>" class="ll-numeric-input" min="0" step="0.01">
         </td>
     </tr>
     <?php
@@ -299,23 +297,18 @@ if (!defined('BT_COND_BUILD_USER')) define('BT_COND_BUILD_USER', 'user');
 </form>
 
 <style>
-    .leglol-numeric-input {
+    .ll-numeric-input {
         width: 120px;
     }
 
-    .sale-cond-tree-view, .sale-cond-control-cont {
-        margin:0 !important; margin-bottom:8px !important;
-    }
-
-    .leglol-condition-builder {
+    .ll-condition-builder {
         position: relative;
         z-index: 10;
         min-height: 100px;
     }
 
-    .leglol-condtree-regdate {
-        cursor: pointer;
-        max-width: 220px;
+    .sale-cond-tree-view, .sale-cond-control-cont {
+        margin:0 !important; margin-bottom:8px !important;
     }
 </style>
 

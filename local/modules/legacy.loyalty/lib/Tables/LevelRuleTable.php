@@ -6,6 +6,7 @@ use Bitrix\Main\Entity\IntegerField;
 use Bitrix\Main\Entity\StringField;
 use Bitrix\Main\Entity\TextField;
 
+// таблица хранит правила для программы разбиения пользователей на уровни
 class LevelRuleTable extends DataManager {
 
     public static function getTableName() {

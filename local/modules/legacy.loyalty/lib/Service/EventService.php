@@ -127,18 +127,18 @@ final class EventService {
     }
 
     private static function ruleTriggersToday(array $rule, array $user, string $todayMd): bool {
-        $value = (string)($rule['VALUE'] ?? '');
+        $ruleType = (string)($rule['TYPE'] ?? '');
         $cond = $rule['CONDITIONS'] ?? [];
         if (!is_array($cond)) {
             $cond = [];
         }
 
-        if ($value === 'date') {
+        if ($ruleType === 'date') {
             $md = (string)($cond['md'] ?? '');
             return $md !== '' && $md === $todayMd;
         }
 
-        if ($value === 'day') {
+        if ($ruleType === 'day') {
             $type = (string)($cond['type'] ?? '');
             if ($type === 'birthday') {
                 $md = self::extractMonthDay($user['PERSONAL_BIRTHDAY'] ?? null);

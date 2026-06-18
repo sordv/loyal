@@ -6,6 +6,7 @@ use Bitrix\Main\Entity\IntegerField;
 use Bitrix\Main\Entity\StringField;
 use Bitrix\Main\Entity\TextField;
 
+// таблица хранит правила для программы начисления/списания бонусов
 class BonusRuleTable extends DataManager {
     public static function getTableName() {
         return 'b_legacy_loyalty_bonus_rule';

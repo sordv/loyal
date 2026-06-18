@@ -6,6 +6,7 @@ use Bitrix\Main\Entity\DateField;
 use Bitrix\Main\Entity\DatetimeField;
 use Bitrix\Main\Entity\IntegerField;
 
+// таблица хранит историю для программы вознаграждения пользователей за события
 class EventHistoryTable extends DataManager {
     public static function getTableName() {
         return 'b_legacy_loyalty_event_history';

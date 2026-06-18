@@ -4,15 +4,9 @@ namespace Legacy\Loyalty;
 use Bitrix\Main\Loader;
 
 class Conditions {
-    /**
-     * Convert flat POST array (from core_condtree) into nested conditions tree.
-     * Compatible with the structure Bitrix condition tree widgets expect.
-     */
+    // преобразование плоского массива условий во вложенное дерево условий
     public static function saveConditions(array $reqConds): array
     {
-        // core_condtree POST array keys look like: 0, 0__0, 0__1, 0__0__0, ...
-        // If PHP receives them unordered, we may accidentally pick a non-root node as level 0.
-        // Force stable "tree order" parsing.
         if (!empty($reqConds)) {
             ksort($reqConds, SORT_NATURAL);
         }
@@ -119,8 +113,7 @@ class Conditions {
             }
 
             if ($level === 0) {
-                // Root must be a group, otherwise UI "All/Any" and "True/False" controls disappear after reload
-                // and values won't be stored. Enforce CondGroup as root.
+                // корень обязан быть группой
                 $conditions = [
                     'id' => $id,
                     'controlId' => 'CondGroup',
@@ -149,7 +142,7 @@ class Conditions {
             ];
         }
 
-        // Backward safety: ensure root has expected fields
+        // гарантия ожидаемых полей корня
         if (($conditions['controlId'] ?? null) !== 'CondGroup') {
             $conditions['controlId'] = 'CondGroup';
         }

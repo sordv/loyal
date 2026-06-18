@@ -47,12 +47,8 @@ if ($request->isPost() && check_bitrix_sessid()) {
     $rawOrder = $request->getPost('ruleOrderCond');
     $rawProduct = $request->getPost('ruleProductCond');
 
-    $conditionsToSaveOrder = is_array($rawOrder)
-        ? LoyaltyConditions::saveConditions($rawOrder)
-        : ($arRule['CONDITIONS_ORDER'] ?? []);
-    $conditionsToSaveProduct = is_array($rawProduct)
-        ? LoyaltyConditions::saveConditions($rawProduct)
-        : ($arRule['CONDITIONS_PRODUCT'] ?? []);
+    $conditionsToSaveOrder = is_array($rawOrder) ? LoyaltyConditions::saveConditions($rawOrder) : ($arRule['CONDITIONS_ORDER'] ?? []);
+    $conditionsToSaveProduct = is_array($rawProduct) ? LoyaltyConditions::saveConditions($rawProduct) : ($arRule['CONDITIONS_PRODUCT'] ?? []);
 
     $arFields = [
         "ACTIVE" => $request->getPost("ACTIVE") === "Y" ? "Y" : "N",
@@ -152,7 +148,7 @@ $programBonusBackUrl = 'program_bonus.php?lang=' . LANG . '&tabControl_active_ta
     <tr>
         <td><?= Loc::getMessage("LEGACY_LOYALTY_RULE_SORT") ?></td>
         <td>
-            <input type="number" name="SORT" value="<?= (int)$arRule['SORT'] ?>" class="leglol-numeric-input">
+            <input type="number" name="SORT" value="<?= (int)$arRule['SORT'] ?>" class="ll-numeric-input">
         </td>
     </tr>
 
@@ -197,7 +193,7 @@ $programBonusBackUrl = 'program_bonus.php?lang=' . LANG . '&tabControl_active_ta
     <tr>
         <td><?= Loc::getMessage("LEGACY_LOYALTY_AMOUNT") ?></td>
         <td>
-            <input type="number" name="AMOUNT" value="<?= (int)$arRule['AMOUNT'] ?>" class="leglol-numeric-input">
+            <input type="number" name="AMOUNT" value="<?= (int)$arRule['AMOUNT'] ?>" class="ll-numeric-input">
         </td>
     </tr>
 
@@ -213,7 +209,7 @@ $programBonusBackUrl = 'program_bonus.php?lang=' . LANG . '&tabControl_active_ta
                 ? \Bitrix\Main\Web\Json::encode($arRule['CONDITIONS_ORDER'])
                 : OrderConditions::baseConditions('json');
             ?>
-            <div id="OrderConditions" class="leglol-condition-builder"></div>
+            <div id="OrderConditions" class="ll-condition-builder"></div>
             <script>
                 BX.ready(function () {
                     new BX.TreeConditions(
@@ -237,7 +233,7 @@ $programBonusBackUrl = 'program_bonus.php?lang=' . LANG . '&tabControl_active_ta
                 ? \Bitrix\Main\Web\Json::encode($arRule['CONDITIONS_PRODUCT'])
                 : ProductConditions::baseConditions('json');
             ?>
-            <div id="ProductConditions" class="leglol-condition-builder"></div>
+            <div id="ProductConditions" class="ll-condition-builder"></div>
             <script>
                 BX.ready(function () {
                     new BX.TreeConditions(
@@ -260,24 +256,18 @@ $programBonusBackUrl = 'program_bonus.php?lang=' . LANG . '&tabControl_active_ta
 </form>
 
 <style>
-    .leglol-numeric-input {
+    .ll-numeric-input {
         width: 120px;
     }
 
-    .sale-cond-tree-view, .sale-cond-control-cont {
-        margin:0 !important; margin-bottom:8px !important;
-    }
-
-    .leglol-condition-builder {
+    .ll-condition-builder {
         position: relative;
         z-index: 1;
         min-height: 100px;
     }
 
-    .leglol-conditions-separator {
-        margin: 20px 0;
-        border-top: 1px dashed #ccc;
-        padding-top: 20px;
+    .sale-cond-tree-view, .sale-cond-control-cont {
+        margin:0 !important; margin-bottom:8px !important;
     }
 </style>
 

@@ -5,6 +5,7 @@ namespace Legacy\Loyalty\Tables;
 use Bitrix\Main\Entity;
 use Bitrix\Main\Type;
 
+// таблица хранит программы лояльности и статус их активности
 class ProgramTable extends Entity\DataManager
 {
     public static function getTableName()

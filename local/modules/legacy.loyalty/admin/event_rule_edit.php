@@ -21,8 +21,8 @@ if (empty($arRule)) {
         'ACTIVE' => 'Y',
         'SORT' => 100,
         'NAME' => '',
-        'TYPE' => '',
-        'VALUE' => 'date',
+        'TYPE' => 'date',
+        'VALUE' => '',
         'FIRE_MODE' => 'Once',
         'FIRE_DAYS' => 0,
         'CONDITIONS' => [],
@@ -51,9 +51,9 @@ if (!isset($arRule['PRIVILEGES']['bonus'])) {
 }
 
 if ($request->isPost() && check_bitrix_sessid()) {
-    $value = (string)$request->getPost('VALUE');
-    if ($value !== 'day') {
-        $value = 'date';
+    $ruleType = (string)$request->getPost('TYPE');
+    if ($ruleType !== 'day') {
+        $ruleType = 'date';
     }
 
     $fireMode = (string)$request->getPost('FIRE_MODE');
@@ -66,7 +66,7 @@ if ($request->isPost() && check_bitrix_sessid()) {
     }
 
     $conditions = [];
-    if ($value === 'date') {
+    if ($ruleType === 'date') {
         $rawDate = trim((string)$request->getPost('COND_DATE'));
         if (!preg_match('/^(\d{1,2})\.(\d{1,2})$/', $rawDate, $m)) {
             $message = [
@@ -116,9 +116,8 @@ if ($request->isPost() && check_bitrix_sessid()) {
             "ACTIVE" => $request->getPost("ACTIVE") === "Y" ? "Y" : "N",
             "SORT" => $sort > 0 ? $sort : 100,
             "NAME" => $name,
-            // TYPE зарезервирован на будущее; пока не редактируем из UI.
-            "TYPE" => (string)($arRule['TYPE'] ?? ''),
-            "VALUE" => $value,
+            "TYPE" => $ruleType,
+            "VALUE" => '',
             "FIRE_MODE" => $fireMode,
             "FIRE_DAYS" => $fireDays,
             "CONDITIONS" => $conditions,
@@ -153,8 +152,8 @@ if ($request->isPost() && check_bitrix_sessid()) {
         'ACTIVE' => $request->getPost("ACTIVE") === "Y" ? "Y" : "N",
         'SORT' => (int)($arRule['SORT'] ?? 100),
         'NAME' => (string)$request->getPost('NAME'),
-        'TYPE' => (string)($arRule['TYPE'] ?? ''),
-        'VALUE' => (string)$request->getPost('VALUE'),
+        'TYPE' => $ruleType,
+        'VALUE' => '',
         'FIRE_MODE' => $fireMode,
         'FIRE_DAYS' => $fireDays,
         'CONDITIONS' => $conditions ?: ($arRule['CONDITIONS'] ?? []),
@@ -173,14 +172,14 @@ if ($message) {
     CAdminMessage::ShowMessage($message);
 }
 
-$value = (string)($arRule['VALUE'] ?? 'date');
-if ($value !== 'day') {
-    $value = 'date';
+$ruleType = (string)($arRule['TYPE'] ?? 'date');
+if ($ruleType !== 'day') {
+    $ruleType = 'date';
 }
 $cond = is_array($arRule['CONDITIONS'] ?? null) ? $arRule['CONDITIONS'] : [];
 
 $condDate = '';
-if ($value === 'date') {
+if ($ruleType === 'date') {
     $md = (string)($cond['md'] ?? '');
     if ($md !== '' && preg_match('/^\d{2}-\d{2}$/', $md)) {
         $ts = strtotime('2000-' . $md);
@@ -209,7 +208,6 @@ if ($fireMode === 'Days') {
 <form method="POST" action="<?= $APPLICATION->GetCurPageParam() ?>" name="form_edit" id="form_edit">
     <?=bitrix_sessid_post()?>
     <input type="hidden" name="ID" value="<?= (int)$ID ?>">
-    <input type="hidden" name="TYPE" value="<?= htmlspecialcharsbx((string)($arRule['TYPE'] ?? '')) ?>">
     <input type="hidden" name="SORT" value="<?= (int)($arRule['SORT'] ?? 100) ?>">
 
     <?php
@@ -257,9 +255,9 @@ if ($fireMode === 'Days') {
     <tr>
         <td><?= Loc::getMessage("LEGACY_LOYALTY_EVENT_VALUE") ?: 'Тип условия' ?></td>
         <td>
-            <select name="VALUE" id="leglol_event_value" onchange="leglolToggleEventConditionUi()">
-                <option value="date" <?= $value === 'date' ? 'selected' : '' ?>><?= Loc::getMessage("LEGACY_LOYALTY_EVENT_VALUE_DATE") ?: 'Дата' ?></option>
-                <option value="day" <?= $value === 'day' ? 'selected' : '' ?>><?= Loc::getMessage("LEGACY_LOYALTY_EVENT_VALUE_DAY") ?: 'День' ?></option>
+            <select name="TYPE" id="leglol_event_type" onchange="leglolToggleEventConditionUi()">
+                <option value="date" <?= $ruleType === 'date' ? 'selected' : '' ?>><?= Loc::getMessage("LEGACY_LOYALTY_EVENT_VALUE_DATE") ?: 'Дата' ?></option>
+                <option value="day" <?= $ruleType === 'day' ? 'selected' : '' ?>><?= Loc::getMessage("LEGACY_LOYALTY_EVENT_VALUE_DAY") ?: 'День' ?></option>
             </select>
         </td>
     </tr>
@@ -303,12 +301,12 @@ if ($fireMode === 'Days') {
 
 <script>
     function leglolToggleEventConditionUi() {
-        var v = document.getElementById('leglol_event_value');
-        var value = v ? v.value : 'date';
+        var v = document.getElementById('leglol_event_type');
+        var ruleType = v ? v.value : 'date';
         var rowDate = document.getElementById('leglol_row_cond_date');
         var rowDay = document.getElementById('leglol_row_cond_day');
-        if (rowDate) rowDate.style.display = (value === 'date') ? '' : 'none';
-        if (rowDay) rowDay.style.display = (value === 'day') ? '' : 'none';
+        if (rowDate) rowDate.style.display = (ruleType === 'date') ? '' : 'none';
+        if (rowDay) rowDay.style.display = (ruleType === 'day') ? '' : 'none';
     }
     leglolToggleEventConditionUi();
 
